@@ -1,0 +1,5 @@
+target
+.idea
+frontend/webapp/bower_components
+frontend/webapp/node_modules
+frontend/webapp/assets/bower
