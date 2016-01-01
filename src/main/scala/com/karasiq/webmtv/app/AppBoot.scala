@@ -20,7 +20,7 @@ object AppBoot extends App {
 
     val service = actorSystem.actorOf(Props[AppHandler], "webService")
 
-    IO(Http) ? Http.Bind(service, interface = "localhost", port = 8900)
+    IO(Http) ? Http.Bind(service, interface = "0.0.0.0", port = 8900)
 
     Runtime.getRuntime.addShutdownHook(new Thread(new Runnable {
       override def run(): Unit = {
