@@ -48,7 +48,8 @@ lazy val backendSettings = Seq(
       "net.databinder.dispatch" %% "dispatch-core" % "0.11.2",
       "org.scala-lang.modules" %% "scala-async" % "0.9.6-RC2",
       "org.scalatest" %% "scalatest" % "2.2.4" % "test",
-      "com.typesafe" % "config" % "1.3.0"
+      "com.typesafe" % "config" % "1.3.0",
+      "org.slf4j" % "slf4j-simple" % "1.7.13"
     )
   },
   mainClass in Compile := Some("com.karasiq.webmtv.app.AppBoot"),
