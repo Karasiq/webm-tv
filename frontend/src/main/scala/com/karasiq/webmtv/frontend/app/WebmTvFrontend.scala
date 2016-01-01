@@ -14,7 +14,7 @@ object WebmTvFrontend extends JSApp {
     Ajax.get(url).map(_.responseText)
   }
 
-  def nextVideo(): Future[String] = ajax("/video")
+  def nextVideo(): Future[String] = ajax(s"/video?timestamp=${scalajs.js.Date.now()}")
 
   @JSExport
   override def main(): Unit = {
