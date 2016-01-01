@@ -12,8 +12,11 @@ var scalaJsType = uglifyEnabled ? 'opt' : 'fastopt';
 var outputDir = './out';
 
 gulp.task('copy', ['bower'], function() {
+    gulp.src('./assets/favicon.ico')
+        .pipe(gulp.dest(outputDir));
+  
     return gulp.src(['./assets/bower/bootstrap/fonts/*'])
-        .pipe(gulp.dest(outputDir + '/fonts/'))
+        .pipe(gulp.dest(outputDir + '/fonts/'));
 });
 
 gulp.task('images', function() {
