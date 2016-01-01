@@ -22,7 +22,6 @@ private[app] object WebmTvHtml {
     val videoTag = "video".tag
     val autoplay = "autoplay".attr
     val controls = "controls".attr
-    // width := 640, height := 360
 
     val nextVideo: js.ThisFunction0[js.Dynamic, Unit] = js.ThisFunction.fromFunction1 { (th: js.Dynamic) ⇒
       WebmTvFrontend.nextVideo().onSuccess {
@@ -38,8 +37,8 @@ private[app] object WebmTvHtml {
     )
   }
 
-  def videoContainer(url: String): Tag = {
-    val video = WebmTvHtml.video(url)(marginTop := 10.px).render
+  def videoContainer(url: String)(videoModifiers: Modifier*): Tag = {
+    val video = WebmTvHtml.video(url)(videoModifiers).render
     div(`class` := "jumbotron", textAlign := "center")(
       // Heading
       row(col(12)(

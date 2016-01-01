@@ -3,8 +3,8 @@ import sbt.Keys._
 // Settings
 lazy val commonSettings = Seq(
   organization := "com.github.karasiq",
-  isSnapshot := true,
-  version := "1.0.0-SNAPSHOT",
+  isSnapshot := false,
+  version := "1.0.0",
   scalaVersion := "2.11.7",
   publishMavenStyle := true,
   publishTo := {
@@ -16,7 +16,7 @@ lazy val commonSettings = Seq(
   },
   publishArtifact in Test := false,
   pomIncludeRepository := { _ ⇒ false },
-  licenses := Seq("The MIT License" → url("http://opensource.org/licenses/MIT")),
+  licenses := Seq("Apache License, Version 2.0" → url("http://opensource.org/licenses/Apache-2.0")),
   homepage := Some(url("https://github.com/Karasiq/webm-tv")),
   pomExtra :=
     <scm>
