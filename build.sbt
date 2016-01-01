@@ -40,6 +40,7 @@ lazy val backendSettings = Seq(
     val akkaV = "2.4.0"
     Seq(
       "com.typesafe.akka" %% "akka-actor" % akkaV,
+      "io.spray" %% "spray-caching" % sprayV,
       "io.spray" %% "spray-can" % sprayV,
       "io.spray" %% "spray-routing-shapeless2" % sprayV,
       "io.spray" %% "spray-json" % "1.3.2",
