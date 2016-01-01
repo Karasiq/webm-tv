@@ -11,18 +11,6 @@ import scalatags.JsDom.all._
 
 object WebmTvFrontend extends JSApp {
   private def ajax(url: String): Future[String] = {
-    /* val promise = Promise[String]()
-    jQuery.ajax(js.Dynamic.literal(
-      url = url,
-      success = { (data: String, textStatus: String, jqXHR: JQueryXHR) ⇒
-        promise.success(data)
-      },
-      error = { (jqXHR: JQueryXHR, textStatus: String, errorThrow: String) ⇒
-        promise.failure(new Exception(errorThrow))
-      },
-      `type` = "GET"
-    ).asInstanceOf[JQueryAjaxSettings])
-    promise.future */
     Ajax.get(url).map(_.responseText)
   }
 

@@ -2,6 +2,7 @@ package com.karasiq.webmtv.sosach
 
 import com.karasiq.webmtv.sosach.api.Thread
 import com.typesafe.config.ConfigFactory
+import spray.caching.LruCache
 
 import scala.collection.JavaConversions._
 import scala.concurrent.duration._
@@ -10,6 +11,10 @@ import scala.language.postfixOps
 import scala.util.{Failure, Random, Success, Try}
 
 object WebmStream {
+  private val boardCache = LruCache[Stream[api.Board]](timeToLive = 10 minutes)
+
+  private val threadCache = LruCache[api.Board](timeToLive = 10 minutes)
+
   private val config = ConfigFactory.load().getConfig("webm-tv.sosach")
 
   private def threadFilter(thread: Thread): Boolean = {
@@ -20,10 +25,11 @@ object WebmStream {
   }
 
   def apply(board: String)(implicit ec: ExecutionContext): Iterator[String] = {
-    val threads = Try(Await.result(SosachApi.board(board), 1 minutes)) match {
+    val boardFuture = boardCache(board, () ⇒ SosachApi.board(board).map(_.toStream))
+    val threads = Try(Await.result(boardFuture, 1 minutes)) match {
       case Success(pages) ⇒
-        for (page <- pages; thread <- page.threads if threadFilter(thread)) yield {
-          SosachApi.thread(board, thread.id)
+        for (page <- pages.iterator; thread <- page.threads if threadFilter(thread)) yield {
+          threadCache((board, thread.id), () ⇒ SosachApi.thread(board, thread.id))
         }
 
       case Failure(exc) ⇒
@@ -42,7 +48,12 @@ object WebmStream {
           Seq.empty
       }
       // Randomize files
-      Random.shuffle(files)
+      val limit = config.getInt("thread-files-limit")
+      if (limit == 0) {
+        Random.shuffle(files)
+      } else {
+        Random.shuffle(files).take(limit)
+      }
     }
   }
 
