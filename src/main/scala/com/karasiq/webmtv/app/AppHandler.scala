@@ -13,7 +13,8 @@ final class AppHandler extends Actor with HttpService {
   private def videoUrl: Directive1[String] = {
     extract { _ ⇒
       if (!stream.hasNext) {
-        stream = WebmStream("b")
+        // Update stream
+        stream = WebmStream()
       }
       stream.next()
     }
