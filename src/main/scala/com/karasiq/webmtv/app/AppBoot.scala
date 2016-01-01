@@ -25,9 +25,9 @@ object AppBoot extends App {
     val service = actorSystem.actorOf(Props(classOf[AppHandler], store), "webService")
 
     // Schedule rescan
-    val config = ConfigFactory.load().getConfig("webm-tv.sosach")
+    val config = ConfigFactory.load().getConfig("webm-tv")
 
-    val boards = config.getStringList("boards")
+    val boards = config.getStringList("sosach.boards")
 
     import actorSystem.dispatcher
 
@@ -35,7 +35,7 @@ object AppBoot extends App {
       boards.foreach(board ⇒ store ! ScanBoard(board))
     }
 
-    IO(Http) ? Http.Bind(service, interface = "0.0.0.0", port = 8900)
+    IO(Http) ? Http.Bind(service, interface = config.getString("host"), port = config.getInt("port"))
 
     Runtime.getRuntime.addShutdownHook(new Thread(new Runnable {
       override def run(): Unit = {
