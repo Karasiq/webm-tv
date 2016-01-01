@@ -18,7 +18,10 @@ private[app] object WebmStore {
     .make()
   )
 
-  private val seen = db.hashSet[String]("seen")
+  private val seen = db.createHashSet[String]("seen")(_
+    .serializer(MapDbSerializer[String])
+    .expireMaxSize(100)
+  )
 
   private val map = db.createHashMap[(String, Long), Seq[String]]("threads")(_
     .counterEnable()

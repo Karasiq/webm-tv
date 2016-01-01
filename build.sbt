@@ -50,7 +50,7 @@ lazy val backendSettings = Seq(
       "org.scalatest" %% "scalatest" % "2.2.4" % "test",
       "com.typesafe" % "config" % "1.3.0",
       "org.slf4j" % "slf4j-simple" % "1.7.13",
-      "com.github.karasiq" %% "mapdbutils" % "1.1.0",
+      "com.github.karasiq" %% "mapdbutils" % "1.1.1",
       "org.mapdb" % "mapdb" % "2.0-beta12"
     )
   },
