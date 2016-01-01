@@ -13,12 +13,9 @@ object WebmStream {
   private val config = ConfigFactory.load().getConfig("webm-tv.sosach")
 
   private def threadFilter(thread: Thread): Boolean = {
-
     val includes = config.getStringList("include-threads")
     val excludes = config.getStringList("exclude-threads")
-
-    thread.opPost.files.exists(_.name.endsWith(".webm")) &&
-      (includes.isEmpty || includes.exists(pt ⇒ pt.r.findFirstIn(thread.opPost.comment.toLowerCase).isDefined)) &&
+    ((includes.isEmpty && thread.posts.flatMap(_.files).exists(_.name.endsWith(".webm"))) || includes.exists(pt ⇒ pt.r.findFirstIn(thread.opPost.comment.toLowerCase).isDefined)) &&
       excludes.forall(pt ⇒ pt.r.findFirstIn(thread.opPost.comment.toLowerCase).isEmpty)
   }
 
