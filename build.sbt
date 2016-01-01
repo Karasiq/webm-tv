@@ -39,11 +39,15 @@ lazy val backendSettings = Seq(
     val sprayV = "1.3.3"
     val akkaV = "2.4.0"
     Seq(
+      "org.scala-lang.modules" %% "scala-xml" % "1.0.4",
       "com.typesafe.akka" %% "akka-actor" % akkaV,
       "io.spray" %% "spray-can" % sprayV,
       "io.spray" %% "spray-routing-shapeless2" % sprayV,
-      "com.lihaoyi" %% "upickle" % "0.3.6",
-      "com.lihaoyi" %% "scalatags" % "0.5.3"
+      "io.spray" %% "spray-json" % "1.3.2",
+      "com.lihaoyi" %% "scalatags" % "0.5.3",
+      "net.databinder.dispatch" %% "dispatch-core" % "0.11.2",
+      "org.scala-lang.modules" %% "scala-async" % "0.9.6-RC2",
+      "org.scalatest" %% "scalatest" % "2.2.4" % "test"
     )
   },
   mainClass in Compile := Some("com.karasiq.webmtv.app.AppBoot"),
