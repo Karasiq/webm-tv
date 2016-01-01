@@ -39,7 +39,6 @@ lazy val backendSettings = Seq(
     val sprayV = "1.3.3"
     val akkaV = "2.4.0"
     Seq(
-      "org.scala-lang.modules" %% "scala-xml" % "1.0.4",
       "com.typesafe.akka" %% "akka-actor" % akkaV,
       "io.spray" %% "spray-can" % sprayV,
       "io.spray" %% "spray-routing-shapeless2" % sprayV,
@@ -47,7 +46,8 @@ lazy val backendSettings = Seq(
       "com.lihaoyi" %% "scalatags" % "0.5.3",
       "net.databinder.dispatch" %% "dispatch-core" % "0.11.2",
       "org.scala-lang.modules" %% "scala-async" % "0.9.6-RC2",
-      "org.scalatest" %% "scalatest" % "2.2.4" % "test"
+      "org.scalatest" %% "scalatest" % "2.2.4" % "test",
+      "com.typesafe" % "config" % "1.3.0"
     )
   },
   mainClass in Compile := Some("com.karasiq.webmtv.app.AppBoot"),
@@ -69,7 +69,7 @@ lazy val frontendSettings = Seq(
 // Projects
 lazy val backend = Project("backend", file("."))
   .settings(commonSettings, backendSettings)
-  .enablePlugins(GulpPlugin)
+  .enablePlugins(GulpPlugin, JavaAppPackaging)
 
 lazy val frontend = Project("frontend", file("frontend"))
   .settings(commonSettings, frontendSettings)

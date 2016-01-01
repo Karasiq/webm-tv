@@ -3,4 +3,5 @@ target
 frontend/webapp/bower_components
 frontend/webapp/node_modules
 frontend/webapp/assets/bower
-src/main/resources/webapp
+frontend/webapp/out
+*.bat
