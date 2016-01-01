@@ -49,7 +49,9 @@ lazy val backendSettings = Seq(
       "org.scala-lang.modules" %% "scala-async" % "0.9.6-RC2",
       "org.scalatest" %% "scalatest" % "2.2.4" % "test",
       "com.typesafe" % "config" % "1.3.0",
-      "org.slf4j" % "slf4j-simple" % "1.7.13"
+      "org.slf4j" % "slf4j-simple" % "1.7.13",
+      "com.github.karasiq" %% "mapdbutils" % "1.1.0",
+      "org.mapdb" % "mapdb" % "2.0-beta12"
     )
   },
   mainClass in Compile := Some("com.karasiq.webmtv.app.AppBoot"),
