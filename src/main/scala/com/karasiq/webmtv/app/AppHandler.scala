@@ -1,30 +1,27 @@
 package com.karasiq.webmtv.app
 
-import akka.actor.{Actor, ActorRefFactory}
-import com.karasiq.webmtv.sosach.WebmStream
+import akka.actor.{Actor, ActorRef, ActorRefFactory}
+import akka.pattern.ask
+import akka.util.Timeout
 import spray.http.MediaTypes
-import spray.routing.{Directive1, HttpService}
+import spray.routing.HttpService
 
-final class AppHandler extends Actor with HttpService {
+import scala.concurrent.duration._
+import scala.language.postfixOps
+
+final class AppHandler(store: ActorRef) extends Actor with HttpService {
   import context.dispatcher
 
-  private var stream: Iterator[String] = Iterator.empty
-
-  private def videoUrl: Directive1[String] = {
-    extract { _ ⇒
-      if (!stream.hasNext) {
-        // Update stream
-        stream = WebmStream()
-      }
-      stream.next()
-    }
-  }
+  private implicit val timeout = Timeout(3 minutes)
 
   override def receive: Actor.Receive = runRoute {
     get {
       // Request video URL
-      (path("video") & videoUrl) { url ⇒
-        complete(url)
+      path("video") {
+        complete((store ? RequestVideo).collect {
+          case WebmVideo(url) ⇒
+            url
+        })
       } ~
       // Index page
       (pathSingleSlash & respondWithMediaType(MediaTypes.`text/html`)) {
