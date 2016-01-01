@@ -20,7 +20,8 @@ private[app] object WebmStore {
 
   private val seen = db.createHashSet[String]("seen")(_
     .serializer(MapDbSerializer[String])
-    .expireMaxSize(100)
+    .expireMaxSize(50)
+    .expireAfterWrite(60, TimeUnit.MINUTES)
   )
 
   private val map = db.createHashMap[(String, Long), Seq[String]]("threads")(_
