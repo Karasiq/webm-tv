@@ -12,9 +12,8 @@ import scala.util.Random
 
 private[app] object WebmStore {
   private val db = MapDbFile(DBMaker
-    .memoryDirectDB()
+    .heapDB()
     .transactionDisable()
-    .compressionEnable()
     .make()
   )
 
