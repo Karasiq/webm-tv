@@ -18,9 +18,9 @@ import scala.util.Random
 final class AppHandler(store: ActorRef) extends Actor with HttpService with CachingDirectives {
   import context.dispatcher
 
-  private implicit val timeout = Timeout(1 minute)
-
   private def videoList(board: Option[String]): Future[Seq[String]] = {
+    implicit val timeout = Timeout(10 seconds)
+
     (store ? RequestWebmList(board)).collect {
       case WebmList(list) ⇒
         Random.shuffle(list)
