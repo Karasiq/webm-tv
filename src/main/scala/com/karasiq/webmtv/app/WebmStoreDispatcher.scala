@@ -75,7 +75,10 @@ class WebmStoreDispatcher(store: WebmStore) extends Actor with ActorLogging {
       }
 
     case RequestWebmList(None) ⇒
-      val videos = store.iterator.flatMap(_._2)
+      val videos = store.iterator.collect {
+        case (ThreadId(b, _), files) if boards.contains(b) ⇒
+          files
+      }.flatten
 
       if (videos.isEmpty) {
         boards.foreach(board ⇒ threadScanner.tell(ScanBoard(board), sender()))
