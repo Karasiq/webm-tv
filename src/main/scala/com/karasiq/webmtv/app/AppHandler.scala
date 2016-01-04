@@ -32,19 +32,21 @@ final class AppHandler(store: ActorRef) extends Actor with HttpService with Cach
 
   override def receive: Actor.Receive = runRoute {
     get {
-      // Request video URLs
-      path(Segment / "videos.json") { board ⇒
-        complete(videoList(Some(board)))
-      } ~
-      path("videos.json") {
-        complete(videoList(None))
-      } ~
-      // Index page
-      (pathSingleSlash & respondWithMediaType(MediaTypes.`text/html`)) {
-        getFromResource("webapp/index.html")
-      } ~
-      // Other resources
-      getFromResourceDirectory("webapp")
+      compressResponse() {
+        // Request video URLs
+        path(Segment / "videos.json") { board ⇒
+          complete(videoList(Some(board)))
+        } ~
+        path("videos.json") {
+          complete(videoList(None))
+        } ~
+        // Index page
+        (pathSingleSlash & respondWithMediaType(MediaTypes.`text/html`)) {
+          getFromResource("webapp/index.html")
+        } ~
+        // Other resources
+        getFromResourceDirectory("webapp")
+      }
     }
   }
 
