@@ -19,7 +19,7 @@ private[app] object WebmHeapStore extends WebmStore {
     .counterEnable()
     .keySerializer(MapDbSerializer[ThreadId])
     .valueSerializer(MapDbSerializer[Seq[String]])
-    .expireAfterWrite(20, TimeUnit.MINUTES)
+    .expireAfterWrite(10, TimeUnit.MINUTES)
   )
 
   override def get(id: ThreadId): Option[Seq[String]] = {
