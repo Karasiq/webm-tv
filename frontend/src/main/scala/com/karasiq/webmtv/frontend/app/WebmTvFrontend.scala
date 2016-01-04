@@ -6,6 +6,7 @@ import org.scalajs.jquery.jQuery
 import rx._
 import upickle.default._
 
+import scala.concurrent.Future
 import scala.scalajs.concurrent.JSExecutionContext.Implicits.queue
 import scala.scalajs.js
 import scala.scalajs.js.JSApp
@@ -69,18 +70,21 @@ object WebmTvFrontend extends JSApp with RxLocation {
     updateVideos()
   }
 
-  def updateVideos(): Unit = {
-    WebmTvApi.getVideos(board()).foreach(list ⇒ videos.update(list))
+  def updateVideos(): Future[Seq[String]] = {
+    val future = WebmTvApi.getVideos(board())
+    future.foreach(list ⇒ videos.update(list))
+    future
   }
 
   @JSExport
   override def main(): Unit = {
     jQuery { () ⇒
-      val container = jQuery("#main-container")
-      container.append {
-        WebmTvHtml.videoContainer(videoSource, seen)(id := "webm-tv-video", marginTop := 10.px, width := container.width() - 120).render
+      updateVideos().foreach { _ ⇒
+        val container = jQuery("#main-container")
+        container.append {
+          WebmTvHtml.videoContainer(videoSource, seen)(id := "webm-tv-video", marginTop := 10.px, width := container.width() - 120).render
+        }
       }
-      updateVideos()
     }
   }
 }
