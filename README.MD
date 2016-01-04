@@ -1,6 +1,8 @@
 # webm-tv
 2ch.hk WebM TV
 
+**On OpenShift**: https://webm-sj9.rhcloud.com/
+
 # How to use
 * Download and extract [application package](https://github.com/Karasiq/webm-tv/releases/download/v1.0.3/webm-tv-1.0.3.zip)
 * Launch `./bin/webm-tv` in console
