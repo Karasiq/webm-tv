@@ -1,6 +1,6 @@
 package com.karasiq.webmtv.app
 
-import akka.actor.{Actor, ActorLogging, Stash}
+import akka.actor.{Actor, ActorLogging, Props}
 import com.karasiq.webmtv.sosach.SosachApi
 import com.karasiq.webmtv.sosach.api.Thread
 import com.typesafe.config.ConfigFactory
@@ -13,14 +13,10 @@ case class ScanThread(board: String, id: Long)
 case class RequestWebmList(board: Option[String] = None)
 case class WebmList(videos: Seq[String])
 
-class WebmStoreDispatcher(store: WebmStore) extends Actor with ActorLogging with Stash {
-  private case object VideosUpdated
-
+class WebmThreadScanner(store: WebmStore) extends Actor with ActorLogging {
   import context.dispatcher
 
   private val config = ConfigFactory.load().getConfig("webm-tv.sosach")
-
-  private val boards = config.getStringList("boards").toSeq
 
   private def threadFilter(thread: Thread): Boolean = {
     val includes = config.getStringList("include-threads")
@@ -29,18 +25,19 @@ class WebmStoreDispatcher(store: WebmStore) extends Actor with ActorLogging with
       excludes.forall(pt ⇒ pt.r.findFirstIn(thread.opPost.comment.toLowerCase).isEmpty)
   }
 
-  override def receive: Receive = {
+  override def receive: Actor.Receive = {
     case ScanBoard(board) ⇒
       log.info("Rescanning board: /{}/", board)
       val self = context.self
+      val sender = context.sender()
       SosachApi.board(board).foreach(_.foreach { page ⇒
         for (thread <- page.threads if threadFilter(thread)) yield {
-          self ! ScanThread(board, thread.id)
+          self.tell(ScanThread(board, thread.id), sender)
         }
       })
 
     case ScanThread(board, id) ⇒
-      val self = context.self
+      val sender = context.sender()
       val threadId = ThreadId(board, id)
       val cached = store.get(threadId)
       if (cached.isEmpty) {
@@ -50,13 +47,20 @@ class WebmStoreDispatcher(store: WebmStore) extends Actor with ActorLogging with
             s"https://2ch.hk/$board/${file.path}"
           }
           store.update(threadId, files)
-          self ! VideosUpdated
+          sender ! WebmList(files)
         }
       }
+  }
+}
 
-    case VideosUpdated ⇒
-      unstashAll()
+class WebmStoreDispatcher(store: WebmStore) extends Actor with ActorLogging {
+  private val config = ConfigFactory.load().getConfig("webm-tv.sosach")
 
+  private val boards = config.getStringList("boards").toSeq
+
+  private val threadScanner = context.actorOf(Props(classOf[WebmThreadScanner], store), "threadScanner")
+
+  override def receive: Receive = {
     case RequestWebmList(Some(board)) ⇒
       val videos = store.iterator.collect {
         case (ThreadId(`board`, _), files) ⇒
@@ -64,9 +68,8 @@ class WebmStoreDispatcher(store: WebmStore) extends Actor with ActorLogging with
       }.flatten
 
       if (videos.isEmpty) {
-        self ! ScanBoard(board)
+        threadScanner.tell(ScanBoard(board), sender())
         log.info("Awaiting videos for /{}/", board)
-        stash()
       } else {
         sender() ! WebmList(videos.toVector)
       }
@@ -75,9 +78,8 @@ class WebmStoreDispatcher(store: WebmStore) extends Actor with ActorLogging with
       val videos = store.iterator.flatMap(_._2)
 
       if (videos.isEmpty) {
-        boards.foreach(board ⇒ self ! ScanBoard(board))
+        boards.foreach(board ⇒ threadScanner.tell(ScanBoard(board), sender()))
         log.info("Awaiting videos")
-        stash()
       } else {
         sender() ! WebmList(videos.toVector)
       }
