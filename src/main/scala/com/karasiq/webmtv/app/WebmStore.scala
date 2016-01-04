@@ -1,46 +1,11 @@
 package com.karasiq.webmtv.app
 
-import java.util.concurrent.TimeUnit
+case class ThreadId(board: String, id: Long)
 
-import com.karasiq.mapdb.MapDbFile
-import com.karasiq.mapdb.MapDbWrapper._
-import com.karasiq.mapdb.serialization.MapDbSerializer
-import com.karasiq.mapdb.serialization.MapDbSerializer.Default._
-import org.mapdb.DBMaker
+trait WebmStore {
+  def get(id: ThreadId): Option[Seq[String]]
 
-import scala.util.Random
+  def update(id: ThreadId, files: Seq[String]): Unit
 
-private[app] object WebmStore {
-  private val db = MapDbFile(DBMaker
-    .heapDB()
-    .transactionDisable()
-    .make()
-  )
-
-  private val seen = db.createHashSet[String]("seen")(_
-    .serializer(MapDbSerializer[String])
-    .expireMaxSize(50)
-    .expireAfterWrite(60, TimeUnit.MINUTES)
-  )
-
-  private val map = db.createHashMap[(String, Long), Seq[String]]("threads")(_
-    .counterEnable()
-    .keySerializer(MapDbSerializer[(String, Long)])
-    .valueSerializer(MapDbSerializer[Seq[String]])
-    .expireAfterWrite(20, TimeUnit.MINUTES)
-  )
-
-  def get(board: String, id: Long): Option[Seq[String]] = {
-    map.get((board, id))
-  }
-
-  def update(board: String, id: Long, files: Seq[String]) = {
-    map += (board, id) → files
-  }
-
-  def next(): Option[String] = {
-    val result = Random.shuffle(map.values.flatten).find(url ⇒ !seen.contains(url))
-    result.foreach(seen += _)
-    result
-  }
+  def iterator: Iterator[(ThreadId, Seq[String])]
 }
