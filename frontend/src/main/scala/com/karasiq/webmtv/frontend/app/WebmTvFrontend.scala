@@ -79,11 +79,9 @@ object WebmTvFrontend extends JSApp with RxLocation {
   @JSExport
   override def main(): Unit = {
     jQuery { () ⇒
-      updateVideos().foreach { _ ⇒
-        val container = jQuery("#main-container")
-        container.append {
-          WebmTvHtml.videoContainer(videoSource, seen)(id := "webm-tv-video", marginTop := 10.px, width := container.width() - 120).render
-        }
+      val container = jQuery("#main-container")
+      container.append {
+        WebmTvHtml.videoContainer(videoSource, seen)(id := "webm-tv-video", marginTop := 10.px, width := container.width() - 120).render
       }
     }
   }

@@ -49,7 +49,6 @@ private[app] object WebmTvHtml {
 
         case None ⇒
           video.pause()
-          video.src = ""
       }
     }
 
