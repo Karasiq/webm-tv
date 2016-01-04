@@ -81,11 +81,8 @@ object WebmTvFrontend extends JSApp with RxLocation {
     jQuery { () ⇒
       val container = jQuery("#main-container")
       container.append {
-        WebmTvHtml.videoContainer(videoSource, seen)(id := "webm-tv-video", marginTop := 10.px).render
+        WebmTvHtml.videoContainer(videoSource, seen)(id := "webm-tv-video", width := 100.pct, marginTop := 10.px).render
       }
-
-      // Size fix
-      jQuery("#webm-tv-video").width(container.width() - 120)
     }
   }
 }
