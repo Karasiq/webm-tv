@@ -35,9 +35,9 @@ private[app] object WebmTvHtml {
     videoTag("autoplay".attr := "autoplay", "controls".attr := "")
   }
 
-  def videoContainer(source: Rx[Option[String]], seen: Var[Set[String]])(videoModifiers: Modifier*): Tag = {
+  def videoContainer(source: Rx[Option[String]], seen: Var[Seq[String]])(videoModifiers: Modifier*): Tag = {
     val video = WebmTvHtml.video(onended := js.ThisFunction.fromFunction1 { (ths: HtmlVideo) ⇒
-      seen.update(seen() + ths.src)
+      seen.update(seen() :+ ths.src)
     }, videoModifiers).render.asInstanceOf[HtmlVideo]
 
     Obs(source, "video-player") {

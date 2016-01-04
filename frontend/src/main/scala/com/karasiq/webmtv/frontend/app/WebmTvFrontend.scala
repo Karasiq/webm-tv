@@ -45,7 +45,10 @@ object WebmTvFrontend extends JSApp with RxLocation {
 
   private val videos = Var(Seq.empty[String], "video-list")
 
-  private val seen = Var(readLocalStorage[Set[String]]("videos-seen", Set.empty), "videos-seen")
+  private val seen = Var({
+    val list = readLocalStorage[Seq[String]]("videos-seen", Nil)
+    if (list.length > 100) list.takeRight(100) else list
+  }, "videos-seen")
 
   private val videoSource = Rx {
     val sn = seen()
