@@ -1,8 +1,20 @@
 package com.karasiq.webmtv.frontend.app
 
-import scala.scalajs.concurrent.JSExecutionContext.Implicits.queue
+import org.scalajs.dom
+import rx._
+
 import scala.scalajs.js
 import scalatags.JsDom.all._
+
+@js.native
+trait HtmlVideo extends dom.Element {
+  var onended: js.ThisFunction0[HtmlVideo, _] = js.native
+  var src: String = js.native
+
+  def load(): Unit = js.native
+  def play(): Unit = js.native
+  def pause(): Unit = js.native
+}
 
 private[app] object WebmTvHtml {
   def glyphicon(name: String): Tag = {
@@ -18,27 +30,29 @@ private[app] object WebmTvHtml {
     div(`class` := s"col-md-$size")
   }
 
-  def video(url: String): Tag = {
+  def video: Tag = {
     val videoTag = "video".tag
-    val autoplay = "autoplay".attr
-    val controls = "controls".attr
+    videoTag("autoplay".attr := "autoplay", "controls".attr := "")
+  }
 
-    val nextVideo: js.ThisFunction0[js.Dynamic, Unit] = js.ThisFunction.fromFunction1 { (th: js.Dynamic) ⇒
-      WebmTvFrontend.nextVideo().onSuccess {
-        case url: String ⇒
-          th.src = url
-          th.load()
-          th.play()
+  def videoContainer(source: Rx[Option[String]], seen: Var[Set[String]])(videoModifiers: Modifier*): Tag = {
+    val video = WebmTvHtml.video(onended := js.ThisFunction.fromFunction1 { (ths: HtmlVideo) ⇒
+      seen.update(seen() + ths.src)
+    }, videoModifiers).render.asInstanceOf[HtmlVideo]
+
+    Obs(source, "video-player") {
+      source() match {
+        case Some(url) ⇒
+          video.src = url
+          video.load()
+          video.play()
+
+        case None ⇒
+          video.pause()
+          video.src = ""
       }
     }
 
-    videoTag(autoplay := "autoplay", controls := "", onended := nextVideo)(
-      source(src := url, `type` := "video/webm")
-    )
-  }
-
-  def videoContainer(url: String)(videoModifiers: Modifier*): Tag = {
-    val video = WebmTvHtml.video(url)(videoModifiers).render
     div(`class` := "jumbotron", textAlign := "center")(
       // Heading
       row(col(12)(
@@ -47,7 +61,7 @@ private[app] object WebmTvHtml {
 
       // Next button
       row(col(12)(
-        button(`type` := "button", `class` := "btn btn-default btn-lg", onclick := { () ⇒ video.asInstanceOf[scalajs.js.Dynamic].onended() })(
+        button(`type` := "button", `class` := "btn btn-default btn-lg", onclick := { () ⇒ video.asInstanceOf[js.Dynamic].onended() })(
           glyphicon("fast-forward"),
           " Next video"
         )

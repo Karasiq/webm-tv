@@ -10,14 +10,17 @@ import scala.collection.JavaConversions._
 case class ScanBoard(board: String)
 case class ScanThread(board: String, id: Long)
 
-case object RequestVideo
-case object VideosUpdated
-case class WebmVideo(url: String)
+case class RequestWebmList(board: Option[String] = None)
+case class WebmList(videos: Seq[String])
 
-class WebmStoreDispatcher extends Actor with ActorLogging with Stash {
+class WebmStoreDispatcher(store: WebmStore) extends Actor with ActorLogging with Stash {
+  private case object VideosUpdated
+
   import context.dispatcher
 
   private val config = ConfigFactory.load().getConfig("webm-tv.sosach")
+
+  private val boards = config.getStringList("boards").toSeq
 
   private def threadFilter(thread: Thread): Boolean = {
     val includes = config.getStringList("include-threads")
@@ -38,14 +41,15 @@ class WebmStoreDispatcher extends Actor with ActorLogging with Stash {
 
     case ScanThread(board, id) ⇒
       val self = context.self
-      val cached = WebmStore.get(board, id)
+      val threadId = ThreadId(board, id)
+      val cached = store.get(threadId)
       if (cached.isEmpty) {
         log.info("Rescanning thread: /{}/{}", board, id)
         SosachApi.thread(board, id).foreach { thread ⇒
           val files = for (post <- thread.threads.head.posts; file <- post.files if file.name.endsWith(".webm")) yield {
             s"https://2ch.hk/$board/${file.path}"
           }
-          WebmStore.update(board, id, files)
+          store.update(threadId, files)
           self ! VideosUpdated
         }
       }
@@ -53,16 +57,29 @@ class WebmStoreDispatcher extends Actor with ActorLogging with Stash {
     case VideosUpdated ⇒
       unstashAll()
 
-    case RequestVideo ⇒
-      val next = WebmStore.next()
-      if (next.isEmpty) {
+    case RequestWebmList(Some(board)) ⇒
+      val videos = store.iterator.collect {
+        case (ThreadId(`board`, _), files) ⇒
+          files
+      }.flatten
+
+      if (videos.isEmpty) {
+        self ! ScanBoard(board)
+        log.info("Awaiting videos for /{}/", board)
+        stash()
+      } else {
+        sender() ! WebmList(videos.toVector)
+      }
+
+    case RequestWebmList(None) ⇒
+      val videos = store.iterator.flatMap(_._2)
+
+      if (videos.isEmpty) {
+        boards.foreach(board ⇒ self ! ScanBoard(board))
         log.info("Awaiting videos")
         stash()
       } else {
-        next.foreach { url ⇒
-          log.info("Video delivered: {}", url)
-          sender() ! WebmVideo(url)
-        }
+        sender() ! WebmList(videos.toVector)
       }
   }
 }

@@ -9,7 +9,6 @@ import akka.util.Timeout
 import com.typesafe.config.ConfigFactory
 import spray.can.Http
 
-import scala.collection.JavaConversions._
 import scala.concurrent.Await
 import scala.concurrent.duration._
 import scala.language.postfixOps
@@ -20,20 +19,12 @@ object AppBoot extends App {
 
     implicit val actorSystem = ActorSystem("webm-tv")
 
-    val store = actorSystem.actorOf(Props[WebmStoreDispatcher], "storeDispatcher")
+    val store = actorSystem.actorOf(Props(classOf[WebmStoreDispatcher], WebmHeapStore), "storeDispatcher")
 
     val service = actorSystem.actorOf(Props(classOf[AppHandler], store), "webService")
 
     // Schedule rescan
     val config = ConfigFactory.load().getConfig("webm-tv")
-
-    val boards = config.getStringList("sosach.boards")
-
-    import actorSystem.dispatcher
-
-    actorSystem.scheduler.schedule(1 second, 5 minutes) {
-      boards.foreach(board ⇒ store ! ScanBoard(board))
-    }
 
     IO(Http) ? Http.Bind(service, interface = config.getString("host"), port = config.getInt("port"))
 
