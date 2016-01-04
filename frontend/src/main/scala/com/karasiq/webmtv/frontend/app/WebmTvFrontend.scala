@@ -1,7 +1,7 @@
 package com.karasiq.webmtv.frontend.app
 
 import org.scalajs.dom
-import org.scalajs.dom.ext.LocalStorage
+import org.scalajs.dom.ext.SessionStorage
 import org.scalajs.jquery.jQuery
 import rx._
 import upickle.default._
@@ -27,12 +27,12 @@ trait RxLocation {
 }
 
 object WebmTvFrontend extends JSApp with RxLocation {
-  private def readLocalStorage[T: Reader](name: String, default: ⇒ T): T = {
-    LocalStorage(name).fold(default)(str ⇒ read[T](str))
+  private def load[T: Reader](name: String, default: ⇒ T): T = {
+    SessionStorage(name).fold(default)(str ⇒ read[T](str))
   }
 
-  private def writeLocalStorage[T: Writer](name: String, value: T): Unit = {
-    LocalStorage.update(name, write(value))
+  private def save[T: Writer](name: String, value: T): Unit = {
+    SessionStorage.update(name, write(value))
   }
 
   private val board: Rx[Option[String]] = Rx {
@@ -47,7 +47,7 @@ object WebmTvFrontend extends JSApp with RxLocation {
   private val videos = Var(Seq.empty[String], "video-list")
 
   private val seen = Var({
-    val list = readLocalStorage[Seq[String]]("videos-seen", Nil)
+    val list = load[Seq[String]]("videos-seen", Nil)
     if (list.length > 100) list.takeRight(100) else list
   }, "videos-seen")
 
@@ -57,7 +57,7 @@ object WebmTvFrontend extends JSApp with RxLocation {
   }
 
   Obs(seen, "videos-seen-ls-writer", skipInitial = true) {
-    writeLocalStorage("videos-seen", seen())
+    save("videos-seen", seen())
   }
 
   Obs(videoSource, "video-list-updater", skipInitial = true) {
@@ -66,7 +66,7 @@ object WebmTvFrontend extends JSApp with RxLocation {
     }
   }
 
-  Obs(board, "video-source-changer", skipInitial = true) {
+  Obs(board, "video-source-changer") {
     updateVideos()
   }
 
