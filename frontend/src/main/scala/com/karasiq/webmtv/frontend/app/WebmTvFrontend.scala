@@ -56,6 +56,8 @@ object WebmTvFrontend extends JSApp with RxLocation {
     videos().find(url ⇒ !sn.contains(url))
   }
 
+  private val loop = Var(false)
+
   Obs(seen, "videos-seen-ls-writer", skipInitial = true) {
     save("videos-seen", seen())
   }

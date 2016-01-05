@@ -4,12 +4,14 @@ import org.scalajs.dom
 import rx._
 
 import scala.scalajs.js
+import scala.scalajs.js.ThisFunction
 import scalatags.JsDom.all._
 
 @js.native
 trait HtmlVideo extends dom.Element {
-  var onended: js.ThisFunction0[HtmlVideo, _] = js.native
+  var onended: js.Function = js.native
   var src: String = js.native
+  var currentTime: Int = js.native
 
   def load(): Unit = js.native
   def play(): Unit = js.native
@@ -17,6 +19,23 @@ trait HtmlVideo extends dom.Element {
 }
 
 private[app] object WebmTvHtml {
+  def bootstrapButton: Tag = {
+    val margin = 5.px
+    button(`type` := "button", `class` := "btn btn-default btn-lg", marginLeft := margin, marginRight := margin)
+  }
+
+  def toggleButton(state: Var[Boolean]): Tag = {
+    bootstrapButton(onclick := ThisFunction.fromFunction1 { (btn: dom.Element) ⇒
+      if (btn.classList.contains("active")) {
+        btn.classList.remove("active")
+        state.update(false)
+      } else {
+        btn.classList.add("active")
+        state.update(true)
+      }
+    })
+  }
+
   def glyphicon(name: String): Tag = {
     span(`class` := s"glyphicon glyphicon-$name")
   }
@@ -36,8 +55,15 @@ private[app] object WebmTvHtml {
   }
 
   def videoContainer(source: Rx[Option[String]], seen: Var[Seq[String]])(videoModifiers: Modifier*): Tag = {
+    val loop = Var(false)
     val video = WebmTvHtml.video(onended := js.ThisFunction.fromFunction1 { (ths: HtmlVideo) ⇒
-      seen.update(seen() :+ ths.src)
+      if (loop()) {
+        ths.pause()
+        ths.currentTime = 0
+        ths.play()
+      } else {
+        seen.update(seen() :+ ths.src)
+      }
     }, videoModifiers).render.asInstanceOf[HtmlVideo]
 
     Obs(source, "video-player") {
@@ -55,14 +81,17 @@ private[app] object WebmTvHtml {
     div(`class` := "jumbotron", textAlign := "center")(
       // Heading
       row(col(12)(
-        h1("Webm-TV player")
+        h1(img(src := "/favicon.ico", maxHeight := 80.px), "Webm-TV player")
       )),
 
-      // Next button
       row(col(12)(
-        button(`type` := "button", `class` := "btn btn-default btn-lg", onclick := { () ⇒ video.asInstanceOf[js.Dynamic].onended() })(
-          glyphicon("fast-forward"),
-          " Next video"
+        // Next button
+        bootstrapButton(onclick := { () ⇒ seen.update(seen() :+ video.src) })(
+          glyphicon("fast-forward"), " Next video"
+        ),
+        // Loop button
+        toggleButton(loop)(
+          glyphicon("repeat"), " Loop"
         )
       )),
 
