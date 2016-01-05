@@ -19,7 +19,7 @@ final class AppHandler(store: ActorRef) extends Actor with HttpService with Cach
   import context.dispatcher
 
   private def videoList(board: Option[String]): Future[Seq[String]] = {
-    implicit val timeout = Timeout(10 seconds)
+    implicit val timeout = Timeout(2 minutes)
 
     (store ? RequestWebmList(board)).collect {
       case WebmList(list) ⇒
