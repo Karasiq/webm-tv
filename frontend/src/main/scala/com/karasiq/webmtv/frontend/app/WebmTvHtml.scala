@@ -66,10 +66,17 @@ private[app] object WebmTvHtml {
       }
     }, videoModifiers).render.asInstanceOf[HtmlVideo]
 
+    val downloadButton = a(title := "Download video", href := "#", "download".attr := "", target := "_blank")(
+      bootstrapButton(
+        glyphicon("floppy-disk"), " Download"
+      )
+    ).render
+
     Obs(source, "video-player") {
       source() match {
         case Some(url) ⇒
           video.src = url
+          downloadButton.href = url
           video.load()
           video.play()
 
@@ -92,7 +99,9 @@ private[app] object WebmTvHtml {
         // Loop button
         toggleButton(loop)(
           glyphicon("repeat"), " Loop"
-        )
+        ),
+        // Download button
+        downloadButton
       )),
 
       // Video player
