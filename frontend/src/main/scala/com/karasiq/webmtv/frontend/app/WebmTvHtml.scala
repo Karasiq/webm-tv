@@ -1,13 +1,16 @@
 package com.karasiq.webmtv.frontend.app
 
 import com.karasiq.webmtv.frontend.utils.{Bootstrap, HtmlVideo}
+import org.scalajs
+import org.scalajs.dom.raw.MouseEvent
 import rx._
 
+import scala.scalajs.concurrent.JSExecutionContext.Implicits.queue
 import scala.scalajs.js
 import scalatags.JsDom.all._
 
 trait WebmTvHtml { self: WebmTvController ⇒
-  import Bootstrap.{button, col, glyphicon, row, toggleButton}
+  import Bootstrap.{button, fullRow, glyphicon, toggleButton}
 
   private def video: Tag = {
     val videoTag = "video".tag
@@ -46,17 +49,24 @@ trait WebmTvHtml { self: WebmTvController ⇒
 
     div(`class` := "jumbotron", textAlign := "center")(
       // Heading
-      row(col(12)(
+      fullRow(
         h1(img(src := "/favicon.ico", maxHeight := 80.px), "Webm-TV player")
-      )),
+      ),
 
-      row(col(12)(
+      fullRow(
         // Next button
         button(onclick := { () ⇒ seen.update(seen() :+ video.src) })(
           glyphicon("fast-forward"), " Next video"
         ),
         // Reshuffle button
-        button(onclick := { () ⇒ updateVideos() })(
+        button(onclick := { (e: MouseEvent) ⇒
+          val btn = e.target.asInstanceOf[scalajs.dom.Element]
+          btn.classList.add("disabled")
+          updateVideos().onComplete {
+            case _ ⇒
+              btn.classList.remove("disabled")
+          }
+        })(
           glyphicon("random"), " Reshuffle"
         ),
         // Loop button
@@ -65,12 +75,12 @@ trait WebmTvHtml { self: WebmTvController ⇒
         ),
         // Download button
         downloadButton
-      )),
+      ),
 
       // Video player
-      row(col(12)(
+      fullRow(
         video
-      ))
+      )
     )
   }
 }

@@ -37,4 +37,6 @@ object Bootstrap {
     assert(size >= 1 && size <= 12, "Invalid size")
     div(`class` := s"col-md-$size")
   }
+
+  def fullRow: Tag = row(col(12))
 }
