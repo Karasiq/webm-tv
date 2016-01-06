@@ -1,90 +1,19 @@
 package com.karasiq.webmtv.frontend.app
 
-import org.scalajs.dom
-import org.scalajs.dom.ext.SessionStorage
+import com.karasiq.webmtv.frontend.utils.AppSessionStorage
 import org.scalajs.jquery.jQuery
-import rx._
-import upickle.default._
 
-import scala.concurrent.Future
-import scala.scalajs.concurrent.JSExecutionContext.Implicits.queue
-import scala.scalajs.js
 import scala.scalajs.js.JSApp
 import scala.scalajs.js.annotation.JSExport
-import scala.util.Random
 import scalatags.JsDom.all._
 
-trait RxLocation {
-  private val lc: Var[dom.Location] = Var(dom.window.location)
-
-  def location: Rx[dom.Location] = lc
-
-  jQuery(() ⇒ {
-    jQuery(dom.window).on("hashchange", () ⇒ {
-      dom.console.log("New location: " + js.JSON.stringify(dom.window.location))
-      lc.update(dom.window.location)
-    })
-  })
-}
-
-object WebmTvFrontend extends JSApp with RxLocation {
-  private def load[T: Reader](name: String, default: ⇒ T): T = {
-    SessionStorage(name).fold(default)(str ⇒ read[T](str))
-  }
-
-  private def save[T: Writer](name: String, value: T): Unit = {
-    SessionStorage.update(name, write(value))
-  }
-
-  private[app] val board: Rx[Option[String]] = Rx {
-    val hash = location().hash
-    if (js.isUndefined(hash) || hash.eq(null) || hash.length <= 1) {
-      None
-    } else {
-      Some(hash.tail)
-    }
-  }
-
-  private[app] val videos = Var(Seq.empty[String], "video-list")
-
-  private[app] val seen = Var({
-    val list = load[Seq[String]]("videos-seen", Nil)
-    if (list.length > 1000) list.takeRight(1000) else list
-  }, "videos-seen")
-
-  private[app] val videoSource = Rx {
-    val sn = seen()
-    videos().find(url ⇒ !sn.contains(url))
-  }
-
-  private[app] val loop = Var(false)
-
-  Obs(seen, "videos-seen-ls-writer", skipInitial = true) {
-    save("videos-seen", seen())
-  }
-
-  Obs(videoSource, "video-list-updater", skipInitial = true) {
-    if (videoSource().isEmpty) {
-      updateVideos()
-    }
-  }
-
-  Obs(board, "video-source-changer") {
-    updateVideos()
-  }
-
-  def updateVideos(): Future[Seq[String]] = {
-    val future = WebmTvApi.getVideos(board()).map(list ⇒ Random.shuffle(list))
-    future.foreach(list ⇒ videos.update(list))
-    future
-  }
-
+object WebmTvFrontend extends JSApp with AppSessionStorage with WebmTvController with WebmTvHtml {
   @JSExport
   override def main(): Unit = {
     jQuery { () ⇒
       val container = jQuery("#main-container")
       container.append {
-        WebmTvHtml.videoContainer(id := "webm-tv-video", width := 100.pct, marginTop := 10.px).render
+        videoContainer(id := "webm-tv-video", width := 100.pct, marginTop := 10.px).render
       }
     }
   }
