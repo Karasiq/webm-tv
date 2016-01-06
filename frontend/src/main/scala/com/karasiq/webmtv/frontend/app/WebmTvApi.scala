@@ -8,17 +8,16 @@ import scala.scalajs.concurrent.JSExecutionContext.Implicits.queue
 import scala.scalajs.js
 
 object WebmTvApi {
-  private def ajax(url: String): Future[String] = {
-    Ajax.get(url).map(_.responseText)
+  private def ajax[T: Reader](url: String): Future[T] = {
+    Ajax.get(url)
+      .map(r ⇒ read[T](r.responseText))
   }
 
   def getVideos(boardId: Option[String] = None): Future[Seq[String]] = boardId match {
     case Some(board) ⇒
-      ajax(s"/$board/videos.json?timestamp=${js.Date.now()}")
-        .map(response ⇒ read[Seq[String]](response))
+      ajax[Seq[String]](s"/$board/videos.json?timestamp=${js.Date.now()}")
 
     case None ⇒
-      ajax(s"/videos.json?timestamp=${js.Date.now()}")
-        .map(response ⇒ read[Seq[String]](response))
+      ajax[Seq[String]](s"/videos.json?timestamp=${js.Date.now()}")
   }
 }

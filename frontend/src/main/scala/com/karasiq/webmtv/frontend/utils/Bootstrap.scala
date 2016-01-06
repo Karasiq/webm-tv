@@ -1,4 +1,4 @@
-package com.karasiq.webmtv.frontend.app
+package com.karasiq.webmtv.frontend.utils
 
 import org.scalajs.dom
 import rx._

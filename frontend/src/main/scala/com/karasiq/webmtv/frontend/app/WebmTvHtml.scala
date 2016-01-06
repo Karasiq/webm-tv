@@ -1,23 +1,12 @@
 package com.karasiq.webmtv.frontend.app
 
-import org.scalajs.dom
+import com.karasiq.webmtv.frontend.utils.{Bootstrap, HtmlVideo}
 import rx._
 
 import scala.scalajs.js
 import scalatags.JsDom.all._
 
-@js.native
-trait HtmlVideo extends dom.Element {
-  var onended: js.Function = js.native
-  var src: String = js.native
-  var currentTime: Int = js.native
-
-  def load(): Unit = js.native
-  def play(): Unit = js.native
-  def pause(): Unit = js.native
-}
-
-private[app] object WebmTvHtml {
+trait WebmTvHtml { self: WebmTvController ⇒
   import Bootstrap.{button, col, glyphicon, row, toggleButton}
 
   private def video: Tag = {
@@ -26,13 +15,13 @@ private[app] object WebmTvHtml {
   }
 
   def videoContainer(videoModifiers: Modifier*): Tag = {
-    val video = WebmTvHtml.video(onended := js.ThisFunction.fromFunction1 { (ths: HtmlVideo) ⇒
-      if (WebmTvFrontend.loop()) {
+    val video = this.video(onended := js.ThisFunction.fromFunction1 { (ths: HtmlVideo) ⇒
+      if (loop()) {
         ths.pause()
         ths.currentTime = 0
         ths.play()
       } else {
-        WebmTvFrontend.seen.update(WebmTvFrontend.seen() :+ ths.src)
+        seen.update(seen() :+ ths.src)
       }
     }, videoModifiers).render.asInstanceOf[HtmlVideo]
 
@@ -42,8 +31,8 @@ private[app] object WebmTvHtml {
       )
     ).render
 
-    Obs(WebmTvFrontend.videoSource, "video-player") {
-      WebmTvFrontend.videoSource() match {
+    Obs(videoSource, "video-player") {
+      videoSource() match {
         case Some(url) ⇒
           video.src = url
           downloadButton.href = url
@@ -63,15 +52,15 @@ private[app] object WebmTvHtml {
 
       row(col(12)(
         // Next button
-        button(onclick := { () ⇒ WebmTvFrontend.seen.update(WebmTvFrontend.seen() :+ video.src) })(
+        button(onclick := { () ⇒ seen.update(seen() :+ video.src) })(
           glyphicon("fast-forward"), " Next video"
         ),
         // Reshuffle button
-        button(onclick := { () ⇒ WebmTvFrontend.updateVideos() })(
+        button(onclick := { () ⇒ updateVideos() })(
           glyphicon("random"), " Reshuffle"
         ),
         // Loop button
-        toggleButton(WebmTvFrontend.loop)(
+        toggleButton(loop)(
           glyphicon("repeat"), " Loop"
         ),
         // Download button
