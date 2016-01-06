@@ -11,6 +11,7 @@ import scala.scalajs.concurrent.JSExecutionContext.Implicits.queue
 import scala.scalajs.js
 import scala.scalajs.js.JSApp
 import scala.scalajs.js.annotation.JSExport
+import scala.util.Random
 import scalatags.JsDom.all._
 
 trait RxLocation {
@@ -35,7 +36,7 @@ object WebmTvFrontend extends JSApp with RxLocation {
     SessionStorage.update(name, write(value))
   }
 
-  private val board: Rx[Option[String]] = Rx {
+  private[app] val board: Rx[Option[String]] = Rx {
     val hash = location().hash
     if (js.isUndefined(hash) || hash.eq(null) || hash.length <= 1) {
       None
@@ -44,19 +45,19 @@ object WebmTvFrontend extends JSApp with RxLocation {
     }
   }
 
-  private val videos = Var(Seq.empty[String], "video-list")
+  private[app] val videos = Var(Seq.empty[String], "video-list")
 
-  private val seen = Var({
+  private[app] val seen = Var({
     val list = load[Seq[String]]("videos-seen", Nil)
     if (list.length > 1000) list.takeRight(1000) else list
   }, "videos-seen")
 
-  private val videoSource = Rx {
+  private[app] val videoSource = Rx {
     val sn = seen()
     videos().find(url ⇒ !sn.contains(url))
   }
 
-  private val loop = Var(false)
+  private[app] val loop = Var(false)
 
   Obs(seen, "videos-seen-ls-writer", skipInitial = true) {
     save("videos-seen", seen())
@@ -73,7 +74,7 @@ object WebmTvFrontend extends JSApp with RxLocation {
   }
 
   def updateVideos(): Future[Seq[String]] = {
-    val future = WebmTvApi.getVideos(board())
+    val future = WebmTvApi.getVideos(board()).map(list ⇒ Random.shuffle(list))
     future.foreach(list ⇒ videos.update(list))
     future
   }
@@ -83,7 +84,7 @@ object WebmTvFrontend extends JSApp with RxLocation {
     jQuery { () ⇒
       val container = jQuery("#main-container")
       container.append {
-        WebmTvHtml.videoContainer(videoSource, seen)(id := "webm-tv-video", width := 100.pct, marginTop := 10.px).render
+        WebmTvHtml.videoContainer(id := "webm-tv-video", width := 100.pct, marginTop := 10.px).render
       }
     }
   }

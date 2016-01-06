@@ -4,7 +4,6 @@ import org.scalajs.dom
 import rx._
 
 import scala.scalajs.js
-import scala.scalajs.js.ThisFunction
 import scalatags.JsDom.all._
 
 @js.native
@@ -19,61 +18,32 @@ trait HtmlVideo extends dom.Element {
 }
 
 private[app] object WebmTvHtml {
-  def bootstrapButton: Tag = {
-    val margin = 5.px
-    button(`type` := "button", `class` := "btn btn-default btn-lg", marginLeft := margin, marginRight := margin)
-  }
+  import Bootstrap.{button, col, glyphicon, row, toggleButton}
 
-  def toggleButton(state: Var[Boolean]): Tag = {
-    bootstrapButton(onclick := ThisFunction.fromFunction1 { (btn: dom.Element) ⇒
-      if (btn.classList.contains("active")) {
-        btn.classList.remove("active")
-        state.update(false)
-      } else {
-        btn.classList.add("active")
-        state.update(true)
-      }
-    })
-  }
-
-  def glyphicon(name: String): Tag = {
-    span(`class` := s"glyphicon glyphicon-$name")
-  }
-
-  def row: Tag = {
-    div(`class` := "row")
-  }
-
-  def col(size: Int): Tag = {
-    assert(size >= 1 && size <= 12, "Invalid size")
-    div(`class` := s"col-md-$size")
-  }
-
-  def video: Tag = {
+  private def video: Tag = {
     val videoTag = "video".tag
     videoTag("autoplay".attr := "autoplay", "controls".attr := "")
   }
 
-  def videoContainer(source: Rx[Option[String]], seen: Var[Seq[String]])(videoModifiers: Modifier*): Tag = {
-    val loop = Var(false)
+  def videoContainer(videoModifiers: Modifier*): Tag = {
     val video = WebmTvHtml.video(onended := js.ThisFunction.fromFunction1 { (ths: HtmlVideo) ⇒
-      if (loop()) {
+      if (WebmTvFrontend.loop()) {
         ths.pause()
         ths.currentTime = 0
         ths.play()
       } else {
-        seen.update(seen() :+ ths.src)
+        WebmTvFrontend.seen.update(WebmTvFrontend.seen() :+ ths.src)
       }
     }, videoModifiers).render.asInstanceOf[HtmlVideo]
 
     val downloadButton = a(title := "Download video", href := "#", "download".attr := "", target := "_blank")(
-      bootstrapButton(
+      button(
         glyphicon("floppy-disk"), " Download"
       )
     ).render
 
-    Obs(source, "video-player") {
-      source() match {
+    Obs(WebmTvFrontend.videoSource, "video-player") {
+      WebmTvFrontend.videoSource() match {
         case Some(url) ⇒
           video.src = url
           downloadButton.href = url
@@ -93,11 +63,15 @@ private[app] object WebmTvHtml {
 
       row(col(12)(
         // Next button
-        bootstrapButton(onclick := { () ⇒ seen.update(seen() :+ video.src) })(
+        button(onclick := { () ⇒ WebmTvFrontend.seen.update(WebmTvFrontend.seen() :+ video.src) })(
           glyphicon("fast-forward"), " Next video"
         ),
+        // Reshuffle button
+        button(onclick := { () ⇒ WebmTvFrontend.updateVideos() })(
+          glyphicon("random"), " Reshuffle"
+        ),
         // Loop button
-        toggleButton(loop)(
+        toggleButton(WebmTvFrontend.loop)(
           glyphicon("repeat"), " Loop"
         ),
         // Download button

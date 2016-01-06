@@ -13,7 +13,6 @@ import spray.routing.directives.CachingDirectives
 import scala.concurrent.Future
 import scala.concurrent.duration._
 import scala.language.postfixOps
-import scala.util.Random
 
 final class AppHandler(store: ActorRef) extends Actor with HttpService with CachingDirectives {
   import context.dispatcher
@@ -23,7 +22,7 @@ final class AppHandler(store: ActorRef) extends Actor with HttpService with Cach
 
     (store ? RequestWebmList(board)).collect {
       case WebmList(list) ⇒
-        Random.shuffle(list)
+        list
     }.recover {
       case _: AskTimeoutException ⇒
         Nil
