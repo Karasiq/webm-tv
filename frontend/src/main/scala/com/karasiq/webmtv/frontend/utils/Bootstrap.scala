@@ -38,5 +38,5 @@ object Bootstrap {
     div(`class` := s"col-md-$size")
   }
 
-  def fullRow: Tag = row(col(12))
+  def fullRow(modifiers: Modifier*): Tag = row(col(12)(modifiers))
 }
