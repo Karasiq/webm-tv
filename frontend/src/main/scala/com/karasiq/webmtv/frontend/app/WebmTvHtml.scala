@@ -61,7 +61,7 @@ trait WebmTvHtml { self: WebmTvController ⇒
         // Reshuffle button
         button(onclick := { (e: MouseEvent) ⇒
           val btn = e.target.asInstanceOf[scalajs.dom.Element]
-          if (btn.classList.contains("disabled")) {
+          if (!btn.classList.contains("disabled")) {
             btn.classList.add("disabled")
             updateVideos().onComplete {
               case _ ⇒
