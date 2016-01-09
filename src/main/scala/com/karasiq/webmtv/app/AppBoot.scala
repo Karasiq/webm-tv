@@ -19,9 +19,9 @@ object AppBoot extends App {
 
     implicit val actorSystem = ActorSystem("webm-tv")
 
-    val store = actorSystem.actorOf(Props(classOf[WebmStoreDispatcher], WebmHeapStore), "storeDispatcher")
-
-    val service = actorSystem.actorOf(Props(classOf[AppHandler], store), "webService")
+    val store: WebmMapDbStore = WebmFileStore
+    val storeDispatcher = actorSystem.actorOf(Props(classOf[WebmStoreDispatcher], store), "storeDispatcher")
+    val service = actorSystem.actorOf(Props(classOf[AppHandler], storeDispatcher), "webService")
 
     // Schedule rescan
     val config = ConfigFactory.load().getConfig("webm-tv")
@@ -30,6 +30,10 @@ object AppBoot extends App {
 
     Runtime.getRuntime.addShutdownHook(new Thread(new Runnable {
       override def run(): Unit = {
+        actorSystem.log.info("Shutting down Webm-TV server")
+        actorSystem.registerOnTermination {
+          store.close()
+        }
         Await.result(actorSystem.terminate(), FiniteDuration(5, TimeUnit.MINUTES))
       }
     }))
