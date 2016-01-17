@@ -18,7 +18,7 @@ object WebmTvAssets {
         raw("<generated-assets/>")
       ),
       body(
-        background := "/img/background.jpg",
+        background := "url(/img/background.jpg)",
         div(id := "main-container", `class` := "container")
       )
     )
