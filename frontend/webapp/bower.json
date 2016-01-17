@@ -1,8 +1,0 @@
-{
-  "name": "webm-tv-frontend",
-  "version": "1.0.0",
-  "dependencies": {
-    "bootstrap": "~3.3.0",
-    "jquery": "~2.1.1"
-  }
-}
