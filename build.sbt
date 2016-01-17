@@ -71,7 +71,7 @@ lazy val backendSettings = Seq(
     PageFile("fonts/glyphicons-halflings-regular", WebAsset("https://raw.githubusercontent.com/twbs/bootstrap/v3.3.6/dist/fonts/glyphicons-halflings-regular.woff2"), "woff2"),
 
     // Static
-    PageHtml(FileAsset("frontend/webapp/html/index.html")),
+    PageHtml(StringAsset(WebmTvAssets.index())),
     PageStyle(FileAsset("frontend/webapp/css/style.css")),
     PageImage("img/background", FileAsset("frontend/webapp/img/background.jpg")),
     PageImage("favicon", FileAsset("frontend/webapp/img/favicon.ico"), "ico", "image/x-icon"),
