@@ -3,7 +3,7 @@ import scalatags.Text.all._
 object WebmTvAssets {
   private val pageTitle = "title".tag
 
-  def index(): String = {
+  def index: String = {
     "<!DOCTYPE html>" + html(
       head(
         meta(charset := "UTF-8"),

@@ -1,5 +1,4 @@
-import com.karasiq.scalajsbundler.ScalaJSBundler._
-import sbt.Keys._
+import com.karasiq.scalajsbundler.dsl.{Script, _}
 
 // Settings
 lazy val commonSettings = Seq(
@@ -59,26 +58,26 @@ lazy val backendSettings = Seq(
   scalaJsBundlerCompile in Compile <<= (scalaJsBundlerCompile in Compile).dependsOn(fullOptJS in Compile in frontend),
   scalaJsBundlerAssets in Compile += Bundle("index",
     // jQuery
-    PageScript(WebAsset("https://code.jquery.com/jquery-1.12.0.js")),
+    Script from url("https://code.jquery.com/jquery-1.12.0.js"),
 
     // Bootstrap
-    PageStyle(WebAsset("https://raw.githubusercontent.com/twbs/bootstrap/v3.3.6/dist/css/bootstrap.css")),
-    PageScript(WebAsset("https://raw.githubusercontent.com/twbs/bootstrap/v3.3.6/dist/js/bootstrap.js")),
-    PageFile("fonts/glyphicons-halflings-regular", WebAsset("https://raw.githubusercontent.com/twbs/bootstrap/v3.3.6/dist/fonts/glyphicons-halflings-regular.eot"), "eot"),
-    PageFile("fonts/glyphicons-halflings-regular", WebAsset("https://raw.githubusercontent.com/twbs/bootstrap/v3.3.6/dist/fonts/glyphicons-halflings-regular.svg"), "svg"),
-    PageFile("fonts/glyphicons-halflings-regular", WebAsset("https://raw.githubusercontent.com/twbs/bootstrap/v3.3.6/dist/fonts/glyphicons-halflings-regular.ttf"), "ttf"),
-    PageFile("fonts/glyphicons-halflings-regular", WebAsset("https://raw.githubusercontent.com/twbs/bootstrap/v3.3.6/dist/fonts/glyphicons-halflings-regular.woff"), "woff"),
-    PageFile("fonts/glyphicons-halflings-regular", WebAsset("https://raw.githubusercontent.com/twbs/bootstrap/v3.3.6/dist/fonts/glyphicons-halflings-regular.woff2"), "woff2"),
+    Style from url("https://raw.githubusercontent.com/twbs/bootstrap/v3.3.6/dist/css/bootstrap.css"),
+    Script from url("https://raw.githubusercontent.com/twbs/bootstrap/v3.3.6/dist/js/bootstrap.js"),
+    Static("fonts/glyphicons-halflings-regular.eot") from url("https://raw.githubusercontent.com/twbs/bootstrap/v3.3.6/dist/fonts/glyphicons-halflings-regular.eot"),
+    Static("fonts/glyphicons-halflings-regular.svg") from url("https://raw.githubusercontent.com/twbs/bootstrap/v3.3.6/dist/fonts/glyphicons-halflings-regular.svg"),
+    Static("fonts/glyphicons-halflings-regular.ttf") from url("https://raw.githubusercontent.com/twbs/bootstrap/v3.3.6/dist/fonts/glyphicons-halflings-regular.ttf"),
+    Static("fonts/glyphicons-halflings-regular.woff") from url("https://raw.githubusercontent.com/twbs/bootstrap/v3.3.6/dist/fonts/glyphicons-halflings-regular.woff"),
+    Static("fonts/glyphicons-halflings-regular.woff2") from url("https://raw.githubusercontent.com/twbs/bootstrap/v3.3.6/dist/fonts/glyphicons-halflings-regular.woff2"),
 
     // Static
-    PageHtml(StringAsset(WebmTvAssets.index())),
-    PageStyle(FileAsset("frontend/webapp/css/style.css")),
-    PageImage("img/background", FileAsset("frontend/webapp/img/background.jpg")),
-    PageImage("favicon", FileAsset("frontend/webapp/img/favicon.ico"), "ico", "image/x-icon"),
+    Html from WebmTvAssets.index,
+    Style from "frontend/webapp/css/style.css",
+    Image("img/background.jpg") from file("frontend/webapp/img/background.jpg"),
+    Image("favicon.ico").withMime("image/x-icon") from file("frontend/webapp/img/favicon.ico"),
 
     // Scala.js app
-    PageScript(FileAsset("frontend/target/scala-2.11/webm-tv-frontend-opt.js")),
-    PageScript(FileAsset("frontend/target/scala-2.11/webm-tv-frontend-launcher.js"))
+    Script from file("frontend/target/scala-2.11/webm-tv-frontend-opt.js"),
+    Script from file("frontend/target/scala-2.11/webm-tv-frontend-launcher.js")
   )
 )
 
