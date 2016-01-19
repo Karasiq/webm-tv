@@ -14,13 +14,26 @@ object WebmTvAssets {
         meta(name := "robots", content := "index,nofollow"),
         base(href := "/"),
         pageTitle("WebM-TV"),
-        link(rel := "shortcut icon", `type` := "image/x-icon", href := "/favicon.ico"),
-        raw("<generated-assets/>")
+        link(rel := "shortcut icon", `type` := "image/x-icon", href := "/favicon.ico")
       ),
       body(
         background := "url(/img/background.jpg)",
-        div(id := "main-container", `class` := "container")
+        div(id := "main-container", `class` := "container", marginTop := 40.px, marginBottom := 40.px)
       )
     )
+  }
+
+  def style: String = {
+    """
+      |@media (min-width: 768px) {
+      |  #main-container {
+      |    max-width: 80%;
+      |  }
+      |}
+      |.glyphicon {
+      |  margin-left: 2px;
+      |  margin-right: 2px;
+      |}
+    """.stripMargin
   }
 }

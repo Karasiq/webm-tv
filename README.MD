@@ -1,5 +1,5 @@
 # webm-tv
-2ch.hk WebM TV
+[2ch.hk](https://2ch.hk/b/) WebM TV, written in pure Scala.
 
 **On OpenShift**: https://webm-sj9.rhcloud.com/
 

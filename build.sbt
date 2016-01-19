@@ -71,7 +71,7 @@ lazy val backendSettings = Seq(
 
     // Static
     Html from WebmTvAssets.index,
-    Style from "frontend/webapp/css/style.css",
+    Style from WebmTvAssets.style,
     Image("img/background.jpg") from file("frontend/webapp/img/background.jpg"),
     Image("favicon.ico").withMime("image/x-icon") from file("frontend/webapp/img/favicon.ico"),
 
