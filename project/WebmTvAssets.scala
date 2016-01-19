@@ -17,7 +17,6 @@ object WebmTvAssets {
         link(rel := "shortcut icon", `type` := "image/x-icon", href := "/favicon.ico")
       ),
       body(
-        background := "url(/img/background.jpg)",
         div(id := "main-container", `class` := "container", marginTop := 40.px, marginBottom := 40.px)
       )
     )
@@ -25,6 +24,9 @@ object WebmTvAssets {
 
   def style: String = {
     """
+      |body {
+      |  background: url(/img/background.jpg);
+      |}
       |@media (min-width: 768px) {
       |  #main-container {
       |    max-width: 80%;
