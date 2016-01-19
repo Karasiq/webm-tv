@@ -55,6 +55,7 @@ lazy val backendSettings = Seq(
     )
   },
   mainClass in Compile := Some("com.karasiq.webmtv.app.AppBoot"),
+  scalaJsBundlerInline in Compile := true,
   scalaJsBundlerCompile in Compile <<= (scalaJsBundlerCompile in Compile).dependsOn(fullOptJS in Compile in frontend),
   scalaJsBundlerAssets in Compile += Bundle("index",
     // jQuery
