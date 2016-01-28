@@ -1,9 +1,8 @@
-# webm-tv
+# webm-tv [![Build Status](https://travis-ci.org/Karasiq/webm-tv.svg?branch=master)](https://travis-ci.org/Karasiq/webm-tv)
 [2ch.hk](https://2ch.hk/b/) WebM TV, written in pure Scala.
 
-[![Build Status](https://travis-ci.org/Karasiq/webm-tv.svg?branch=master)](https://travis-ci.org/Karasiq/webm-tv)
-
-**On OpenShift**: https://webm-sj9.rhcloud.com/
+# On OpenShift
+https://webm-sj9.rhcloud.com/
 
 # How to use
 * Download and extract [application package](https://github.com/Karasiq/webm-tv/releases/download/v1.0.5/webm-tv-1.0.5.zip)
