@@ -34,7 +34,6 @@ lazy val commonSettings = Seq(
 
 lazy val backendSettings = Seq(
   name := "webm-tv",
-  resolvers += Resolver.sonatypeRepo("snapshots"),
   libraryDependencies ++= {
     val sprayV = "1.3.3"
     val akkaV = "2.4.0"
@@ -57,39 +56,45 @@ lazy val backendSettings = Seq(
   mainClass in Compile := Some("com.karasiq.webmtv.app.AppBoot"),
   scalaJsBundlerInline in Compile := true,
   scalaJsBundlerCompile in Compile <<= (scalaJsBundlerCompile in Compile).dependsOn(fullOptJS in Compile in frontend),
-  scalaJsBundlerAssets in Compile += Bundle("index",
-    // jQuery
-    Script from url("https://code.jquery.com/jquery-1.12.0.js"),
+  scalaJsBundlerAssets in Compile += {
+    val bootstrap = github("twbs", "bootstrap", "3.3.6") / "dist"
+    val videoJs = github("videojs", "video.js", "5.8.0") / "dist"
+    val jsDeps = Seq(
+      // jQuery
+      Script from url("https://code.jquery.com/jquery-1.12.0.js"),
+      // Boostrap
+      Style from url(bootstrap % "css/bootstrap.css"),
+      Script from url(bootstrap % "js/bootstrap.js"),
+      // Video.js
+      Script from url(videoJs % "video.min.js"),
+      Style from url(videoJs % "video-js.min.css"),
+      Static("video-js.swf") from url(videoJs % "video-js.swf")
+    )
+    val fonts = fontPackage("glyphicons-halflings-regular", bootstrap % "fonts/glyphicons-halflings-regular")
+    val appFiles = Seq(
+      Html from WebmTvAssets.index,
+      Style from WebmTvAssets.style,
+      Image("img/background.jpg") from file("frontend/webapp/img/background.jpg"),
+      Image("favicon.ico").withMime("image/x-icon") from file("frontend/webapp/img/favicon.ico"),
 
-    // Bootstrap
-    Style from url("https://raw.githubusercontent.com/twbs/bootstrap/v3.3.6/dist/css/bootstrap.css"),
-    Script from url("https://raw.githubusercontent.com/twbs/bootstrap/v3.3.6/dist/js/bootstrap.js"),
-    Static("fonts/glyphicons-halflings-regular.eot") from url("https://raw.githubusercontent.com/twbs/bootstrap/v3.3.6/dist/fonts/glyphicons-halflings-regular.eot"),
-    Static("fonts/glyphicons-halflings-regular.svg") from url("https://raw.githubusercontent.com/twbs/bootstrap/v3.3.6/dist/fonts/glyphicons-halflings-regular.svg"),
-    Static("fonts/glyphicons-halflings-regular.ttf") from url("https://raw.githubusercontent.com/twbs/bootstrap/v3.3.6/dist/fonts/glyphicons-halflings-regular.ttf"),
-    Static("fonts/glyphicons-halflings-regular.woff") from url("https://raw.githubusercontent.com/twbs/bootstrap/v3.3.6/dist/fonts/glyphicons-halflings-regular.woff"),
-    Static("fonts/glyphicons-halflings-regular.woff2") from url("https://raw.githubusercontent.com/twbs/bootstrap/v3.3.6/dist/fonts/glyphicons-halflings-regular.woff2"),
-
-    // Static
-    Html from WebmTvAssets.index,
-    Style from WebmTvAssets.style,
-    Image("img/background.jpg") from file("frontend/webapp/img/background.jpg"),
-    Image("favicon.ico").withMime("image/x-icon") from file("frontend/webapp/img/favicon.ico"),
-
-    // Scala.js app
-    Script from file("frontend/target/scala-2.11/webm-tv-frontend-opt.js"),
-    Script from file("frontend/target/scala-2.11/webm-tv-frontend-launcher.js")
-  )
+      // Scala.js app
+      Script from file("frontend/target/scala-2.11/webm-tv-frontend-opt.js"),
+      Script from file("frontend/target/scala-2.11/webm-tv-frontend-launcher.js")
+    )
+    Bundle("index", jsDeps ++ appFiles ++ fonts:_*)
+  }
 )
 
 lazy val frontendSettings = Seq(
   persistLauncher in Compile := true,
   name := "webm-tv-frontend",
+  resolvers += Resolver.sonatypeRepo("snapshots"),
   libraryDependencies ++= Seq(
     "be.doeraene" %%% "scalajs-jquery" % "0.8.1",
     "com.lihaoyi" %%% "scalatags" % "0.5.3",
     "com.lihaoyi" %%% "scalarx" % "0.2.8",
-    "com.lihaoyi" %%% "upickle" % "0.3.6"
+    "com.lihaoyi" %%% "upickle" % "0.3.6",
+    "com.github.karasiq" %%% "scalajs-videojs" % "1.0.1-SNAPSHOT"
   )
 )
 

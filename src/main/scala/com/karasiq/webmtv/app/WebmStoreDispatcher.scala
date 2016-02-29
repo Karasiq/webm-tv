@@ -31,7 +31,7 @@ class WebmThreadScanner(store: WebmStore) extends Actor with ActorLogging {
       val self = context.self
       val sender = context.sender()
       SosachApi.board(board).foreach(_.foreach { page ⇒
-        for (thread <- page.threads if threadFilter(thread)) yield {
+        for (thread ← page.threads if threadFilter(thread)) yield {
           self.tell(ScanThread(board, thread.id), sender)
         }
       })
@@ -43,7 +43,7 @@ class WebmThreadScanner(store: WebmStore) extends Actor with ActorLogging {
       if (cached.isEmpty) {
         log.info("Rescanning thread: /{}/{}", board, id)
         SosachApi.thread(board, id).foreach { thread ⇒
-          val files = for (post <- thread.threads.head.posts; file <- post.files if file.name.endsWith(".webm")) yield {
+          val files = for (post ← thread.threads.head.posts; file ← post.files if file.name.endsWith(".webm")) yield {
             s"https://2ch.hk/$board/${file.path}"
           }
           store.update(threadId, files)

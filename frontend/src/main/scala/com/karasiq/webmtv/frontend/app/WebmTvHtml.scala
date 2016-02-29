@@ -1,6 +1,7 @@
 package com.karasiq.webmtv.frontend.app
 
-import com.karasiq.webmtv.frontend.utils.{Bootstrap, HtmlVideo}
+import com.karasiq.videojs._
+import com.karasiq.webmtv.frontend.utils.Bootstrap
 import org.scalajs
 import org.scalajs.dom.raw.MouseEvent
 import rx._
@@ -12,40 +13,43 @@ import scalatags.JsDom.all._
 trait WebmTvHtml { self: WebmTvController ⇒
   import Bootstrap.{button, fullRow, glyphicon, toggleButton}
 
-  private def video: Tag = {
-    val videoTag = "video".tag
-    videoTag("autoplay".attr := "autoplay", "controls".attr := "")
-  }
-
   def videoContainer(videoModifiers: Modifier*): Tag = {
-    val video = this.video(onended := js.ThisFunction.fromFunction1 { (ths: HtmlVideo) ⇒
-      if (loop()) {
-        ths.pause()
-        ths.currentTime = 0
-        ths.play()
-      } else {
-        seen.update(seen() :+ ths.src)
-      }
-    }, videoModifiers).render.asInstanceOf[HtmlVideo]
-
     val downloadButton = a(title := "Download video", href := "#", "download".attr := "", target := "_blank")(
       button(
         glyphicon("floppy-disk"), " Download"
       )
     ).render
 
-    Obs(videoSource, "video-player") {
-      videoSource() match {
-        case Some(url) ⇒
-          video.src = url
-          downloadButton.href = url
-          video.load()
-          video.play()
+    var player: js.UndefOr[VideoJSPlayer] = js.undefined
+    val video = VideoJSBuilder()
+      .options("bigPlayButton" → false)
+      .fluid(true)
+      .ready { pl ⇒
+        player = pl
+        pl.on("ended", () ⇒ {
+          if (loop.now) {
+            pl.pause()
+            pl.currentTime(0)
+            pl.play()
+          } else {
+            seen.update(seen.now :+ pl.src())
+          }
+        })
 
-        case None ⇒
-          video.pause()
+        Obs(videoSource, "video-player") {
+          videoSource.now match {
+            case Some(url) ⇒
+              pl.src(VideoSource("video/webm", url))
+              downloadButton.href = url
+              pl.load()
+              pl.play()
+
+            case None ⇒
+              pl.pause()
+          }
+        }
       }
-    }
+      .build()
 
     div(`class` := "jumbotron", textAlign := "center")(
       // Heading
@@ -55,7 +59,11 @@ trait WebmTvHtml { self: WebmTvController ⇒
 
       fullRow(
         // Next button
-        button(onclick := { () ⇒ seen.update(seen() :+ video.src) })(
+        button(onclick := { () ⇒
+          player.foreach { video ⇒
+            seen.update(seen.now :+ video.src())
+          }
+        })(
           glyphicon("fast-forward"), " Next video"
         ),
         // Reshuffle button
@@ -81,7 +89,7 @@ trait WebmTvHtml { self: WebmTvController ⇒
 
       // Video player
       fullRow(
-        video
+        div(video, videoModifiers)
       )
     )
   }
