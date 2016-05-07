@@ -20,7 +20,7 @@ trait WebmTvHtml { self: WebmTvController ⇒
       )
     ).render
 
-    var player: js.UndefOr[VideoJSPlayer] = js.undefined
+    var player: js.UndefOr[Player] = js.undefined
     val video = VideoJSBuilder()
       .options("bigPlayButton" → false)
       .fluid(true)
