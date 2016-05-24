@@ -35,15 +35,13 @@ lazy val commonSettings = Seq(
 lazy val backendSettings = Seq(
   name := "webm-tv",
   libraryDependencies ++= {
-    val sprayV = "1.3.3"
-    val akkaV = "2.4.0"
+    val akkaV = "2.4.6"
     Seq(
+      "org.jsoup" % "jsoup" % "1.9.2",
       "com.typesafe.akka" %% "akka-actor" % akkaV,
-      "io.spray" %% "spray-caching" % sprayV,
-      "io.spray" %% "spray-can" % sprayV,
-      "io.spray" %% "spray-routing-shapeless2" % sprayV,
-      "io.spray" %% "spray-json" % "1.3.2",
-      "com.lihaoyi" %% "scalatags" % "0.5.3",
+      "com.typesafe.akka" %% "akka-http-experimental" % akkaV,
+      "com.lihaoyi" %% "scalatags" % "0.5.4",
+      "com.lihaoyi" %% "upickle" % "0.3.8",
       "net.databinder.dispatch" %% "dispatch-core" % "0.11.2",
       "org.scala-lang.modules" %% "scala-async" % "0.9.6-RC2",
       "org.scalatest" %% "scalatest" % "2.2.4" % "test",
@@ -53,7 +51,7 @@ lazy val backendSettings = Seq(
       "org.mapdb" % "mapdb" % "2.0-beta12"
     )
   },
-  mainClass in Compile := Some("com.karasiq.webmtv.app.AppBoot"),
+  mainClass in Compile := Some("com.karasiq.webmtv.app.Main"),
   scalaJsBundlerInline in Compile := true,
   scalaJsBundlerCompile in Compile <<= (scalaJsBundlerCompile in Compile).dependsOn(fullOptJS in Compile in frontend),
   scalaJsBundlerAssets in Compile += {
