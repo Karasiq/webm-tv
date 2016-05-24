@@ -4,7 +4,7 @@ import com.karasiq.scalajsbundler.dsl.{Script, _}
 lazy val commonSettings = Seq(
   organization := "com.github.karasiq",
   isSnapshot := false,
-  version := "1.0.6-SNAPSHOT",
+  version := "1.0.6",
   scalaVersion := "2.11.8",
   publishMavenStyle := true,
   publishTo := {
