@@ -11,7 +11,6 @@ trait RxLocation {
 
   jQuery(() ⇒ {
     jQuery(scalajs.dom.window).on("hashchange", () ⇒ {
-      scalajs.dom.console.log("New location: " + scala.scalajs.js.JSON.stringify(scalajs.dom.window.location))
       lc.update(scalajs.dom.window.location)
     })
   })

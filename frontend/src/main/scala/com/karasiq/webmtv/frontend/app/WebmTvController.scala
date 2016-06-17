@@ -10,6 +10,8 @@ import scala.scalajs.js
 import scala.util.Random
 
 trait WebmTvController { self: AppStorage ⇒
+  implicit final val rxContext: Ctx.Owner = Ctx.Owner.Unsafe
+
   protected val board: Rx[Option[String]] = Rx {
     val hash = RxLocation.location().hash
     if (js.isUndefined(hash) || hash.eq(null) || hash.length <= 1) {
@@ -19,12 +21,12 @@ trait WebmTvController { self: AppStorage ⇒
     }
   }
 
-  protected val videos = Var(Seq.empty[String], "video-list")
+  protected val videos = Var(Seq.empty[String])
 
-  protected val seen = Var({
+  protected val seen = Var {
     val list = load[Seq[String]]("videos-seen", Nil)
     if (list.length > 1000) list.takeRight(1000) else list
-  }, "videos-seen")
+  }
 
   protected val videoSource = Rx {
     val sn = seen()
@@ -33,23 +35,13 @@ trait WebmTvController { self: AppStorage ⇒
 
   protected val loop = Var(false)
 
-  Obs(seen, "videos-seen-ls-writer", skipInitial = true) {
-    save("videos-seen", seen())
-  }
-
-  Obs(videoSource, "video-list-updater", skipInitial = true) {
-    if (videoSource().isEmpty) {
-      updateVideos()
-    }
-  }
-
-  Obs(board, "video-source-changer") {
-    updateVideos()
-  }
+  seen.triggerLater(save("videos-seen", seen.now))
+  videoSource.triggerLater(if (videoSource.now.isEmpty) updateVideos())
+  board.trigger(updateVideos())
 
   def updateVideos(): Future[Seq[String]] = {
-    val future = WebmTvApi.getVideos(board()).map(list ⇒ Random.shuffle(list))
-    future.foreach(list ⇒ videos.update(list))
+    val future = WebmTvApi.getVideos(board.now).map(Random.shuffle(_))
+    future.foreach(videos.update)
     future
   }
 }
