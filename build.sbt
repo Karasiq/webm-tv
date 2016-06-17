@@ -4,7 +4,7 @@ import com.karasiq.scalajsbundler.dsl.{Script, _}
 lazy val commonSettings = Seq(
   organization := "com.github.karasiq",
   isSnapshot := false,
-  version := "1.0.6",
+  version := "1.0.7",
   scalaVersion := "2.11.8",
   publishMavenStyle := true,
   publishTo := {
@@ -63,12 +63,13 @@ lazy val backendSettings = Seq(
       // Boostrap
       Style from url(bootstrap % "css/bootstrap.css"),
       Script from url(bootstrap % "js/bootstrap.js"),
+      Style from url("https://raw.githubusercontent.com/FortAwesome/Font-Awesome/v4.5.0/css/font-awesome.css"),
       // Video.js
       Script from url(videoJs % "video.min.js"),
       Style from url(videoJs % "video-js.min.css"),
       Static("video-js.swf") from url(videoJs % "video-js.swf")
     )
-    val fonts = fontPackage("glyphicons-halflings-regular", bootstrap % "fonts/glyphicons-halflings-regular")
+    val fonts = fontPackage("fontawesome-webfont", "https://raw.githubusercontent.com/FortAwesome/Font-Awesome/v4.5.0/fonts/fontawesome-webfont")
     val appFiles = Seq(
       Html from WebmTvAssets.index,
       Style from WebmTvAssets.style,
@@ -89,18 +90,19 @@ lazy val frontendSettings = Seq(
   resolvers += Resolver.sonatypeRepo("snapshots"),
   libraryDependencies ++= Seq(
     "be.doeraene" %%% "scalajs-jquery" % "0.8.1",
-    "com.lihaoyi" %%% "scalatags" % "0.5.3",
-    "com.lihaoyi" %%% "scalarx" % "0.2.8",
+    "com.lihaoyi" %%% "scalatags" % "0.5.4",
+    "com.lihaoyi" %%% "scalarx" % "0.3.1",
     "com.lihaoyi" %%% "upickle" % "0.3.6",
-    "com.github.karasiq" %%% "scalajs-videojs" % "1.0.3"
+    "com.github.karasiq" %%% "scalajs-videojs" % "1.0.3",
+    "com.github.karasiq" %%% "scalajs-bootstrap" % "1.0.6"
   )
 )
 
 // Projects
-lazy val backend = Project("backend", file("."))
+lazy val backend = project.in(file("."))
   .settings(commonSettings, backendSettings)
   .enablePlugins(ScalaJSBundlerPlugin, JavaAppPackaging)
 
-lazy val frontend = Project("frontend", file("frontend"))
+lazy val frontend = project.in(file("frontend"))
   .settings(commonSettings, frontendSettings)
   .enablePlugins(ScalaJSPlugin)

@@ -1,31 +1,62 @@
 package com.karasiq.webmtv.frontend.app
 
+import com.karasiq.bootstrap.Bootstrap
+import com.karasiq.bootstrap.BootstrapImplicits._
+import com.karasiq.bootstrap.grid.GridSystem
+import com.karasiq.bootstrap.icons.FontAwesome
 import com.karasiq.videojs._
-import com.karasiq.webmtv.frontend.utils.Bootstrap
-import org.scalajs
-import org.scalajs.dom.raw.MouseEvent
+import org.scalajs.dom
+import org.scalajs.dom.html.Button
 import rx._
 
 import scala.scalajs.concurrent.JSExecutionContext.Implicits.queue
 import scala.scalajs.js
-import scalatags.JsDom.all._
+import scalatags.JsDom.all.{button => btn, _}
 
 trait WebmTvHtml { self: WebmTvController ⇒
-  import Bootstrap.{button, fullRow, glyphicon, toggleButton}
-
   def videoContainer(videoModifiers: Modifier*): Tag = {
-    val downloadButton = a(title := "Download video", href := "#", "download".attr := "", target := "_blank")(
-      button(
-        glyphicon("floppy-disk"), " Download"
-      )
-    ).render
-
-    var player: js.UndefOr[Player] = js.undefined
     val video = VideoJSBuilder()
       .options("bigPlayButton" → false)
       .fluid(true)
       .ready { pl ⇒
-        player = pl
+        def addButton(icon: Modifier)(f: Button ⇒ Unit): Unit = {
+          pl.asInstanceOf[js.Dynamic].controlBar.addChild("button", js.Dynamic.literal(
+            el = btn(`class` := "vjs-control vjs-button", aria.live := "polite", `type` := "button")(
+              icon,
+              onclick := Bootstrap.jsClick(e ⇒ f(e.asInstanceOf[Button]))
+            ).render
+          ))
+        }
+
+        addButton("fast-forward".fontAwesome(FontAwesome.fixedWidth)) { _ ⇒
+          seen.update(seen.now :+ pl.src())
+        }
+
+        addButton("random".fontAwesome(FontAwesome.fixedWidth)) { btn ⇒
+          if (!btn.classList.contains("disabled")) {
+            btn.classList.add("disabled")
+            updateVideos().onComplete(_ ⇒ btn.classList.remove("disabled"))
+          }
+        }
+
+        val repeatIcon = Rx[Tag] {
+          if (loop())
+            "repeat".fontAwesome(FontAwesome.fixedWidth, FontAwesome.spin)
+          else
+            "repeat".fontAwesome(FontAwesome.fixedWidth)
+        }
+
+        addButton(repeatIcon) { _ ⇒
+          loop() = !loop.now
+        }
+
+        addButton("floppy-o".fontAwesome(FontAwesome.fixedWidth)) { btn ⇒
+          val anchor = a(href := videoSource.now.getOrElse("#"), "download".attr := "", target := "_blank", display.none).render
+          dom.document.body.appendChild(anchor)
+          dom.window.setTimeout(() ⇒ dom.document.body.removeChild(anchor), 700)
+          anchor.click()
+        }
+
         pl.on("ended", () ⇒ {
           if (loop.now) {
             pl.pause()
@@ -36,59 +67,30 @@ trait WebmTvHtml { self: WebmTvController ⇒
           }
         })
 
-        Obs(videoSource, "video-player") {
-          videoSource.now match {
-            case Some(url) ⇒
-              pl.src(VideoSource("video/webm", url))
-              downloadButton.href = url
-              pl.load()
-              pl.play()
+        pl.on("error", () ⇒ {
+          updateVideos()
+        })
 
-            case None ⇒
-              pl.pause()
-          }
+        videoSource.foreach {
+          case Some(url) ⇒
+            pl.src(VideoSource("video/webm", url))
+            pl.load()
+            pl.play()
+
+          case None ⇒
+            pl.pause()
         }
       }
       .build()
 
     div(`class` := "jumbotron", textAlign := "center")(
       // Heading
-      fullRow(
+      GridSystem.mkRow(
         h1(img(src := "/favicon.ico", maxHeight := 80.px), "Webm-TV player")
       ),
 
-      fullRow(
-        // Next button
-        button(onclick := { () ⇒
-          player.foreach { video ⇒
-            seen.update(seen.now :+ video.src())
-          }
-        })(
-          glyphicon("fast-forward"), " Next video"
-        ),
-        // Reshuffle button
-        button(onclick := { (e: MouseEvent) ⇒
-          val btn = e.target.asInstanceOf[scalajs.dom.Element]
-          if (!btn.classList.contains("disabled")) {
-            btn.classList.add("disabled")
-            updateVideos().onComplete {
-              case _ ⇒
-                btn.classList.remove("disabled")
-            }
-          }
-        })(
-          glyphicon("random"), " Reshuffle"
-        ),
-        // Loop button
-        toggleButton(loop)(
-          glyphicon("repeat"), " Loop"
-        ),
-        // Download button
-        downloadButton
-      ),
-
       // Video player
-      fullRow(
+      GridSystem.mkRow(
         div(video, videoModifiers)
       )
     )
