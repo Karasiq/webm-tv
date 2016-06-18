@@ -1,38 +1,27 @@
 package com.karasiq.webmtv.frontend.app
 
-import com.karasiq.bootstrap.Bootstrap
 import com.karasiq.bootstrap.BootstrapImplicits._
 import com.karasiq.bootstrap.grid.GridSystem
 import com.karasiq.bootstrap.icons.FontAwesome
 import com.karasiq.videojs._
-import org.scalajs.dom
-import org.scalajs.dom.html.Button
+import com.karasiq.webmtv.frontend.utils.WebmTvPlayerUtils._
+import org.scalajs.dom.{document, window}
 import rx._
 
 import scala.scalajs.concurrent.JSExecutionContext.Implicits.queue
-import scala.scalajs.js
-import scalatags.JsDom.all.{button => btn, _}
+import scalatags.JsDom.all._
 
 trait WebmTvHtml { self: WebmTvController ⇒
   def videoContainer(videoModifiers: Modifier*): Tag = {
     val video = VideoJSBuilder()
-      .options("bigPlayButton" → false)
+      .options("bigPlayButton" → false, "loadingSpinner" → false)
       .fluid(true)
-      .ready { pl ⇒
-        def addButton(icon: Modifier)(f: Button ⇒ Unit): Unit = {
-          pl.asInstanceOf[js.Dynamic].controlBar.addChild("button", js.Dynamic.literal(
-            el = btn(`class` := "vjs-control vjs-button", aria.live := "polite", `type` := "button")(
-              icon,
-              onclick := Bootstrap.jsClick(e ⇒ f(e.asInstanceOf[Button]))
-            ).render
-          ))
+      .ready { player ⇒
+        player.addButton("Next video", "fast-forward".fontAwesome()) { _ ⇒
+          seen.update(seen.now :+ player.src())
         }
 
-        addButton("fast-forward".fontAwesome(FontAwesome.fixedWidth)) { _ ⇒
-          seen.update(seen.now :+ pl.src())
-        }
-
-        addButton("random".fontAwesome(FontAwesome.fixedWidth)) { btn ⇒
+        player.addButton("Reshuffle", "random".fontAwesome()) { btn ⇒
           if (!btn.classList.contains("disabled")) {
             btn.classList.add("disabled")
             updateVideos().onComplete(_ ⇒ btn.classList.remove("disabled"))
@@ -41,44 +30,44 @@ trait WebmTvHtml { self: WebmTvController ⇒
 
         val repeatIcon = Rx[Tag] {
           if (loop())
-            "repeat".fontAwesome(FontAwesome.fixedWidth, FontAwesome.spin)
+            "repeat".fontAwesome(FontAwesome.spin)
           else
-            "repeat".fontAwesome(FontAwesome.fixedWidth)
+            "repeat".fontAwesome()
         }
 
-        addButton(repeatIcon) { _ ⇒
+        player.addButton("Loop", repeatIcon) { _ ⇒
           loop() = !loop.now
         }
 
-        addButton("floppy-o".fontAwesome(FontAwesome.fixedWidth)) { btn ⇒
+        player.addButton("Download", "floppy-o".fontAwesome()) { btn ⇒
           val anchor = a(href := videoSource.now.getOrElse("#"), "download".attr := "", target := "_blank", display.none).render
-          dom.document.body.appendChild(anchor)
-          dom.window.setTimeout(() ⇒ dom.document.body.removeChild(anchor), 700)
+          document.body.appendChild(anchor)
+          window.setTimeout(() ⇒ document.body.removeChild(anchor), 700)
           anchor.click()
         }
 
-        pl.on("ended", () ⇒ {
+        player.on("ended", () ⇒ {
           if (loop.now) {
-            pl.pause()
-            pl.currentTime(0)
-            pl.play()
+            player.pause()
+            player.currentTime(0)
+            player.play()
           } else {
-            seen.update(seen.now :+ pl.src())
+            seen.update(seen.now :+ player.src())
           }
         })
 
-        pl.on("error", () ⇒ {
-          updateVideos()
+        player.on("error", () ⇒ {
+          window.setTimeout(() ⇒ updateVideos(), 100)
         })
 
         videoSource.foreach {
           case Some(url) ⇒
-            pl.src(VideoSource("video/webm", url))
-            pl.load()
-            pl.play()
+            player.src(VideoSource("video/webm", url))
+            player.load()
+            player.play()
 
           case None ⇒
-            pl.pause()
+            player.pause()
         }
       }
       .build()
