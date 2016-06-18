@@ -94,7 +94,7 @@ lazy val frontendSettings = Seq(
     "com.lihaoyi" %%% "scalarx" % "0.3.1",
     "com.lihaoyi" %%% "upickle" % "0.3.6",
     "com.github.karasiq" %%% "scalajs-videojs" % "1.0.3",
-    "com.github.karasiq" %%% "scalajs-bootstrap" % "1.0.6"
+    "com.github.karasiq" %%% "scalajs-bootstrap" % "1.0.7"
   )
 )
 
