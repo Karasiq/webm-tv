@@ -27,12 +27,12 @@ object WebmTvPlayerUtils {
   }
 
   implicit class PlayerOps(private val player: Player) extends AnyVal {
-    def addButton(title: String, icon: Modifier)(f: Button ⇒ Unit): Unit = {
+    def addButton(title: String, modifiers: Modifier*)(f: Button ⇒ Unit): Unit = {
       player.asInstanceOf[js.Dynamic].controlBar.addChild("button", js.Dynamic.literal(
         el = button(
           `class` := "vjs-control vjs-button",
           aria.live := "polite", `type` := "button",
-          icon,
+          modifiers,
           onclick := Bootstrap.jsClick(e ⇒ f(e.asInstanceOf[Button])),
           onTouch(e ⇒ f(e.asInstanceOf[Button])),
           span(`class` := "vjs-control-text", title)
