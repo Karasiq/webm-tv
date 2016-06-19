@@ -63,31 +63,29 @@ trait WebmTvHtml { self: WebmTvController ⇒
         player.addButton("Download", "floppy-o".fontAwesome())(_ ⇒ downloadVideo())
 
         document.addEventListener("keydown", (e: KeyboardEvent) ⇒ {
-          if (e.shiftKey) {
-            e.keyCode match {
-              case 37 if showPrevious.now ⇒ // Left arrow
-                e.preventDefault()
-                previousVideo()
+          e.keyCode match {
+            case 37 if showPrevious.now ⇒ // Left arrow
+              e.preventDefault()
+              previousVideo()
 
-              case 39 ⇒ // Right arrow
-                e.preventDefault()
-                nextVideo()
+            case 39 ⇒ // Right arrow
+              e.preventDefault()
+              nextVideo()
 
-              case 68 ⇒ // D
-                e.preventDefault()
-                downloadVideo()
+            case 68 if e.shiftKey ⇒ // Shift+D
+              e.preventDefault()
+              downloadVideo()
 
-              case 76 ⇒ // L
-                e.preventDefault()
-                changeLoop()
+            case 76 if e.shiftKey ⇒ // Shift+L
+              e.preventDefault()
+              changeLoop()
 
-              case 82 ⇒ // R
-                e.preventDefault()
-                reshuffle()
+            case 82 if e.shiftKey ⇒ // Shift+R
+              e.preventDefault()
+              reshuffle()
 
-              case _ ⇒
-                // Skip
-            }
+            case _ ⇒
+            // Skip
           }
         })
 
@@ -126,8 +124,8 @@ trait WebmTvHtml { self: WebmTvController ⇒
             Popover("2ch.hk WebM TV", div(
               b("Controls"),
               ul(
-                li("Shift+⇐ - previous video"),
-                li("Shift+⇒ - next video"),
+                li("⇐ - previous video"),
+                li("⇒ - next video"),
                 li("Shift+R - reshuffle"),
                 li("Shift+L - toggle loop"),
                 li("Shift+D - download")
