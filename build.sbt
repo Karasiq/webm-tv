@@ -4,7 +4,7 @@ import com.karasiq.scalajsbundler.dsl.{Script, _}
 lazy val commonSettings = Seq(
   organization := "com.github.karasiq",
   isSnapshot := false,
-  version := "1.0.8",
+  version := "1.0.9-SNAPSHOT",
   scalaVersion := "2.11.8",
   publishMavenStyle := true,
   publishTo := {
@@ -55,11 +55,11 @@ lazy val backendSettings = Seq(
   scalaJsBundlerInline in Compile := true,
   scalaJsBundlerCompile in Compile <<= (scalaJsBundlerCompile in Compile).dependsOn(fullOptJS in Compile in frontend),
   scalaJsBundlerAssets in Compile += {
-    val bootstrap = github("twbs", "bootstrap", "3.3.6") / "dist"
-    val videoJs = github("videojs", "video.js", "5.8.0") / "dist"
+    val bootstrap = github("twbs", "bootstrap", "v3.3.6") / "dist"
+    val videoJs = github("videojs", "video.js", "v5.8.8") / "dist"
     val jsDeps = Seq(
       // jQuery
-      Script from url("https://code.jquery.com/jquery-1.12.0.js"),
+      Script from url("https://code.jquery.com/jquery-2.2.4.min.js"),
       // Boostrap
       Style from url(bootstrap % "css/bootstrap.css"),
       Script from url(bootstrap % "js/bootstrap.js"),
@@ -80,7 +80,7 @@ lazy val backendSettings = Seq(
       Script from file("frontend/target/scala-2.11/webm-tv-frontend-opt.js"),
       Script from file("frontend/target/scala-2.11/webm-tv-frontend-launcher.js")
     )
-    Bundle("index", jsDeps ++ appFiles ++ fonts:_*)
+    Bundle("index", jsDeps, appFiles, fonts)
   }
 )
 
@@ -89,7 +89,7 @@ lazy val frontendSettings = Seq(
   name := "webm-tv-frontend",
   resolvers += Resolver.sonatypeRepo("snapshots"),
   libraryDependencies ++= Seq(
-    "be.doeraene" %%% "scalajs-jquery" % "0.8.1",
+    "be.doeraene" %%% "scalajs-jquery" % "0.9.0",
     "com.lihaoyi" %%% "scalatags" % "0.5.4",
     "com.lihaoyi" %%% "scalarx" % "0.3.1",
     "com.lihaoyi" %%% "upickle" % "0.3.6",
