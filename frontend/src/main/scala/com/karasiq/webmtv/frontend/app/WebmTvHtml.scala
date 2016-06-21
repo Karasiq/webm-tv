@@ -5,6 +5,7 @@ import com.karasiq.bootstrap.grid.GridSystem
 import com.karasiq.bootstrap.icons.FontAwesome
 import com.karasiq.bootstrap.popover.Popover
 import com.karasiq.videojs._
+import com.karasiq.webmtv.frontend.utils.HammerJS
 import com.karasiq.webmtv.frontend.utils.WebmTvPlayerUtils._
 import org.scalajs.dom.{KeyboardEvent, document, window}
 import rx._
@@ -34,7 +35,7 @@ trait WebmTvHtml { self: WebmTvController ⇒
           }
         }
 
-        def changeLoop(): Unit = {
+        def toggleLoop(): Unit = {
           loop() = !loop.now
         }
 
@@ -56,12 +57,14 @@ trait WebmTvHtml { self: WebmTvController ⇒
         }
         val loopIcon = Rx[Tag](if (loop()) "repeat".fontAwesome(FontAwesome.spin) else "repeat".fontAwesome())
 
+        // Player buttons
         player.addButton("Previous video", "fast-backward".fontAwesome(), showPrevious.reactiveShow)(_ ⇒ previousVideo())
         player.addButton("Next video", "fast-forward".fontAwesome())(_ ⇒ nextVideo())
-        player.addButton("Reshuffle", "random".fontAwesome())(_ ⇒ reshuffle())
-        player.addButton("Loop", loopIcon)(_ ⇒ changeLoop())
-        player.addButton("Download", "floppy-o".fontAwesome())(_ ⇒ downloadVideo())
+        player.addButton("Reshuffle", "random".fontAwesome(), "hidden-xs".addClass)(_ ⇒ reshuffle())
+        player.addButton("Loop", loopIcon, "hidden-xs".addClass)(_ ⇒ toggleLoop())
+        player.addButton("Download", "floppy-o".fontAwesome(), "hidden-xs".addClass)(_ ⇒ downloadVideo())
 
+        // Hotkeys
         document.addEventListener("keydown", (e: KeyboardEvent) ⇒ {
           e.keyCode match {
             case 37 if showPrevious.now ⇒ // Left arrow
@@ -78,7 +81,7 @@ trait WebmTvHtml { self: WebmTvController ⇒
 
             case 76 if e.shiftKey ⇒ // Shift+L
               e.preventDefault()
-              changeLoop()
+              toggleLoop()
 
             case 82 if e.shiftKey ⇒ // Shift+R
               e.preventDefault()
@@ -88,6 +91,14 @@ trait WebmTvHtml { self: WebmTvController ⇒
             // Skip
           }
         })
+
+        // Touch gestures
+        HammerJS()
+          .enable("rotate")
+          .on("swipeleft", _ ⇒ if (showPrevious.now) previousVideo())
+          .on("swiperight", _ ⇒ nextVideo())
+          .on("rotate", _ ⇒ reshuffle())
+          .applyTo(player.el())
 
         player.on("ended", () ⇒ {
           if (loop.now) {
@@ -129,6 +140,12 @@ trait WebmTvHtml { self: WebmTvController ⇒
                 li("Shift+R - reshuffle"),
                 li("Shift+L - toggle loop"),
                 li("Shift+D - download")
+              ),
+              b("Gestures"),
+              ul(
+                li("Left swipe - previous video"),
+                li("Right swipe - next video"),
+                li("Rotate - reshuffle")
               ),
               b("Select board with URL hash"),
               ul(
