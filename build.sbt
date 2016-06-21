@@ -67,7 +67,9 @@ lazy val backendSettings = Seq(
       // Video.js
       Script from url(videoJs % "video.min.js"),
       Style from url(videoJs % "video-js.min.css"),
-      Static("video-js.swf") from url(videoJs % "video-js.swf")
+      Static("video-js.swf") from url(videoJs % "video-js.swf"),
+      // Hammer.js
+      Script from url("https://hammerjs.github.io/dist/hammer.min.js")
     )
     val fonts = fontPackage("fontawesome-webfont", "https://raw.githubusercontent.com/FortAwesome/Font-Awesome/v4.5.0/fonts/fontawesome-webfont")
     val appFiles = Seq(
