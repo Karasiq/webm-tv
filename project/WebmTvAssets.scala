@@ -27,6 +27,11 @@ object WebmTvAssets {
       |body {
       |  background: url(/img/background.jpg);
       |}
+      |@media (max-width: 424px) {
+      |  .vjs-xs-hide {
+      |    display: none !important;
+      |  }
+      |}
       |@media (min-width: 768px) {
       |  #main-container {
       |    max-width: 80%;
