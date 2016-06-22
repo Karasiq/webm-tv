@@ -4,7 +4,7 @@ import com.karasiq.scalajsbundler.dsl.{Script, _}
 lazy val commonSettings = Seq(
   organization := "com.github.karasiq",
   isSnapshot := false,
-  version := "1.0.9-SNAPSHOT",
+  version := "1.0.9",
   scalaVersion := "2.11.8",
   publishMavenStyle := true,
   publishTo := {
@@ -95,8 +95,8 @@ lazy val frontendSettings = Seq(
     "com.lihaoyi" %%% "scalatags" % "0.5.4",
     "com.lihaoyi" %%% "scalarx" % "0.3.1",
     "com.lihaoyi" %%% "upickle" % "0.3.6",
-    "com.github.karasiq" %%% "scalajs-videojs" % "1.0.3",
-    "com.github.karasiq" %%% "scalajs-bootstrap" % "1.0.7"
+    "com.github.karasiq" %%% "scalajs-videojs" % "1.0.4",
+    "com.github.karasiq" %%% "scalajs-bootstrap" % "1.0.9"
   )
 )
 

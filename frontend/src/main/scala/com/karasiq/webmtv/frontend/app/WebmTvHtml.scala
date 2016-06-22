@@ -56,13 +56,14 @@ trait WebmTvHtml { self: WebmTvController ⇒
           }
         }
         val loopIcon = Rx[Tag](if (loop()) "repeat".fontAwesome(FontAwesome.spin) else "repeat".fontAwesome())
+        val vjsXsHide = "vjs-xs-hide".addClass
 
         // Player buttons
-        player.addButton("Previous video", "fast-backward".fontAwesome(), showPrevious.reactiveShow)(_ ⇒ previousVideo())
-        player.addButton("Next video", "fast-forward".fontAwesome())(_ ⇒ nextVideo())
-        player.addButton("Reshuffle", "random".fontAwesome(), "hidden-xs".addClass)(_ ⇒ reshuffle())
-        player.addButton("Loop", loopIcon, "hidden-xs".addClass)(_ ⇒ toggleLoop())
-        player.addButton("Download", "floppy-o".fontAwesome(), "hidden-xs".addClass)(_ ⇒ downloadVideo())
+        player.addButton("Previous video", "fast-backward".fontAwesome(), showPrevious.reactiveShow)(previousVideo())
+        player.addButton("Next video", "fast-forward".fontAwesome())(nextVideo())
+        player.addButton("Reshuffle", "random".fontAwesome(), vjsXsHide)(reshuffle())
+        player.addButton("Loop", loopIcon, vjsXsHide)(toggleLoop())
+        player.addButton("Download", "floppy-o".fontAwesome(), vjsXsHide)(downloadVideo())
 
         // Hotkeys
         document.addEventListener("keydown", (e: KeyboardEvent) ⇒ {
