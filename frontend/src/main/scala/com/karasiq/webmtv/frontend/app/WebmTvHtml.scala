@@ -59,10 +59,10 @@ trait WebmTvHtml { self: WebmTvController ⇒
         val vjsXsHide = "vjs-xs-hide".addClass
 
         // Player buttons
-        player.addButton("Previous video", "fast-backward".fontAwesome(), showPrevious.reactiveShow)(previousVideo())
+        player.addButton("Previous video", "fast-backward".fontAwesome(), showPrevious.reactiveShow, vjsXsHide)(previousVideo())
         player.addButton("Next video", "fast-forward".fontAwesome())(nextVideo())
         player.addButton("Reshuffle", "random".fontAwesome(), vjsXsHide)(reshuffle())
-        player.addButton("Loop", loopIcon, vjsXsHide)(toggleLoop())
+        player.addButton("Loop", loopIcon)(toggleLoop())
         player.addButton("Download", "floppy-o".fontAwesome(), vjsXsHide)(downloadVideo())
 
         // Hotkeys
@@ -96,8 +96,8 @@ trait WebmTvHtml { self: WebmTvController ⇒
         // Touch gestures
         HammerJS()
           .enable("rotate")
-          .on("swipeleft", _ ⇒ if (showPrevious.now) previousVideo())
-          .on("swiperight", _ ⇒ nextVideo())
+          .on("swiperight", _ ⇒ if (showPrevious.now) previousVideo())
+          .on("swipeleft", _ ⇒ nextVideo())
           .on("rotate", _ ⇒ reshuffle())
           .applyTo(player.el())
 
@@ -144,8 +144,8 @@ trait WebmTvHtml { self: WebmTvController ⇒
               ),
               b("Gestures"),
               ul(
-                li("Left swipe - previous video"),
-                li("Right swipe - next video"),
+                li("Left swipe - next video"),
+                li("Right swipe - previous video"),
                 li("Rotate - reshuffle")
               ),
               b("Select board with URL hash"),
