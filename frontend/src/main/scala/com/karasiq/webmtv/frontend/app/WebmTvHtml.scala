@@ -124,7 +124,7 @@ trait WebmTvHtml { self: WebmTvController ⇒
       .build()
 
     val boards = Seq("b", "po", "tv", "e", "a")
-    div(`class` := "jumbotron", textAlign := "center")(
+    div(`class` := "jumbotron", textAlign := "center", backgroundColor := "rgba(238, 238, 238, 0.2)")(
       // Heading
       GridSystem.mkRow(
         h1(
