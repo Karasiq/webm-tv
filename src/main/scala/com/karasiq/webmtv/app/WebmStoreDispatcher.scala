@@ -43,7 +43,8 @@ class WebmThreadScanner(boardApi: BoardApi, store: WebmStore) extends Actor with
       if (cached.isEmpty) {
         log.info("Rescanning thread: /{}/{}", board, id)
         boardApi.thread(board, id).runForeach { thread ⇒
-          val files = for (post ← thread.posts; file ← post.files if file.endsWith(".webm")) yield file
+          val files = for (post ← thread.posts; file ← post.files if file.endsWith(".webm"))
+            yield file.replaceFirst("^https?://", "//")
           store.update(threadId, files)
           sender ! WebmList(files)
         }
