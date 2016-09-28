@@ -20,7 +20,7 @@ trait WebmTvHtml { self: WebmTvController ⇒
       .fluid(true)
       .ready { player ⇒
         def nextVideo(): Unit = {
-          seen() = seen.now :+ player.src()
+          seen() = seen.now ++ videoSource.now
         }
 
         def previousVideo(): Unit = {
