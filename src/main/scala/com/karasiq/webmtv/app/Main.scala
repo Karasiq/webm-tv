@@ -25,15 +25,26 @@ object Main extends App {
 
     val config = ConfigFactory.load().getConfig("webm-tv")
     val boardApi = new BoardApi {
-      val jsonApi = new Json2chBoardApi(config.getString("sosach.host"))
-      val htmlApi = new M2chBoardApi() // Fallback
+      private val primary = new Json2chBoardApi(config.getString("sosach.host"))
+      private val fallback = config.getString("sosach.fallback-host") match {
+        case "" ⇒
+          None
+
+        case "m2-ch.ru" ⇒
+          Some(new M2chBoardApi())
+
+        case other ⇒
+          Some(new Json2chBoardApi(other))
+      }
 
       def board(name: String) = {
-        jsonApi.board(name).recoverWithRetries(1, { case _ ⇒ htmlApi.board(name) })
+        primary.board(name)
+          .recoverWithRetries(1, { case _ ⇒ fallback.getOrElse(primary).board(name) })
       }
 
       def thread(board: String, id: Long) = {
-        jsonApi.thread(board, id).recoverWithRetries(1, { case _ ⇒ htmlApi.thread(board, id) })
+        primary.thread(board, id)
+          .recoverWithRetries(1, { case _ ⇒ fallback.getOrElse(primary).thread(board, id) })
       }
     }
     val store = WebmFileStore

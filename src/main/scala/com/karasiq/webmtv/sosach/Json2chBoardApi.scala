@@ -42,6 +42,8 @@ class Json2chBoardApi(host: String = "2ch.hk")(implicit as: ActorSystem, am: Act
   private def retrieveJson[T: Reader](url: String) = {
     Source
       .fromFuture(http.singleRequest(HttpRequest(uri = url, headers = List(Accept(MediaRange(MediaTypes.`application/json`))))))
+      .log("2ch-json-api")
+      .filter(_.status.isSuccess())
       .flatMapConcat(_.entity.dataBytes)
       .fold(ByteString.empty)(_ ++ _)
       .map(bs ⇒ read[T](bs.utf8String))
