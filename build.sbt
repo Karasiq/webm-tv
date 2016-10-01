@@ -3,8 +3,8 @@ import com.karasiq.scalajsbundler.dsl.{Script, _}
 // Settings
 lazy val commonSettings = Seq(
   organization := "com.github.karasiq",
-  isSnapshot := false,
-  version := "1.0.9",
+  version := "1.1.0",
+  isSnapshot := version.value.endsWith("SNAPSHOT"),
   scalaVersion := "2.11.8",
   publishMavenStyle := true,
   publishTo := {
