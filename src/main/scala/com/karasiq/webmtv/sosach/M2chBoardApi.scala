@@ -19,6 +19,8 @@ class M2chBoardApi(implicit as: ActorSystem, am: ActorMaterializer) extends Boar
   private def htmlPage(url: String): Source[Document, NotUsed] = {
     Source
       .fromFuture(http.singleRequest(HttpRequest(uri = url)))
+      .log("m2ch-html-api")
+      .filter(_.status.isSuccess())
       .flatMapConcat(_.entity.dataBytes)
       .fold(ByteString.empty)(_ ++ _)
       .map(bs ⇒ Jsoup.parse(bs.utf8String, url))
