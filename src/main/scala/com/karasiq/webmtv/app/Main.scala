@@ -25,8 +25,7 @@ object Main extends App {
 
     val config = ConfigFactory.load().getConfig("webm-tv")
     val boardApi = new BoardApi {
-      private val primary = new Json2chBoardApi(config.getString("sosach.host"))
-      private val fallback = config.getString("sosach.fallback-host") match {
+      private def apiForHost(host: String): Option[BoardApi] = host match {
         case "" ⇒
           None
 
@@ -37,14 +36,23 @@ object Main extends App {
           Some(new Json2chBoardApi(other))
       }
 
+      private val primary = apiForHost(config.getString("sosach.host"))
+        .getOrElse(sys.error("Primary 2ch API host is not defined"))
+
+      private val fallback = apiForHost(config.getString("sosach.fallback-host"))
+        .getOrElse {
+          actorSystem.log.warning("2ch API fallback host is not defined")
+          primary
+        }
+
       def board(name: String) = {
         primary.board(name)
-          .recoverWithRetries(1, { case _ ⇒ fallback.getOrElse(primary).board(name) })
+          .recoverWithRetries(1, { case _ ⇒ fallback.board(name) })
       }
 
       def thread(board: String, id: Long) = {
         primary.thread(board, id)
-          .recoverWithRetries(1, { case _ ⇒ fallback.getOrElse(primary).thread(board, id) })
+          .recoverWithRetries(1, { case _ ⇒ fallback.thread(board, id) })
       }
     }
     val store = WebmFileStore
