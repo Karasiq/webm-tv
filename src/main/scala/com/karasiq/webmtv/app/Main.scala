@@ -5,9 +5,9 @@ import java.util.concurrent.TimeUnit
 import akka.actor._
 import akka.http.scaladsl.Http
 import akka.http.scaladsl.Http.ServerBinding
-import akka.stream.{ActorMaterializer, ActorMaterializerSettings}
+import akka.stream.ActorMaterializer
 import akka.util.Timeout
-import com.karasiq.webmtv.sosach.M2chBoardApi
+import com.karasiq.webmtv.sosach.{BoardApi, Json2chBoardApi, M2chBoardApi}
 import com.typesafe.config.ConfigFactory
 
 import scala.concurrent.Await
@@ -21,12 +21,23 @@ object Main extends App {
 
     implicit val actorSystem = ActorSystem("webm-tv")
     implicit val executionContext = actorSystem.dispatcher
-    implicit val actorMaterializer = ActorMaterializer(ActorMaterializerSettings(actorSystem))
+    implicit val actorMaterializer = ActorMaterializer()
 
-    val boardApi = new M2chBoardApi()
+    val config = ConfigFactory.load().getConfig("webm-tv")
+    val boardApi = new BoardApi {
+      val jsonApi = new Json2chBoardApi(config.getString("sosach.host"))
+      val htmlApi = new M2chBoardApi() // Fallback
+
+      def board(name: String) = {
+        jsonApi.board(name).recoverWithRetries(1, { case _ ⇒ htmlApi.board(name) })
+      }
+
+      def thread(board: String, id: Long) = {
+        jsonApi.thread(board, id).recoverWithRetries(1, { case _ ⇒ htmlApi.thread(board, id) })
+      }
+    }
     val store = WebmFileStore
     val storeDispatcher = actorSystem.actorOf(Props(classOf[WebmStoreDispatcher], boardApi, store), "storeDispatcher")
-    val config = ConfigFactory.load().getConfig("webm-tv")
     val server = new Server(storeDispatcher)
 
     Http().bindAndHandle(server.route, config.getString("host"), config.getInt("port")).onComplete {

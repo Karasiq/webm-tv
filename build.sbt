@@ -35,13 +35,13 @@ lazy val commonSettings = Seq(
 lazy val backendSettings = Seq(
   name := "webm-tv",
   libraryDependencies ++= {
-    val akkaV = "2.4.6"
+    val akkaV = "2.4.10"
     Seq(
       "org.jsoup" % "jsoup" % "1.9.2",
       "com.typesafe.akka" %% "akka-actor" % akkaV,
       "com.typesafe.akka" %% "akka-http-experimental" % akkaV,
       "com.lihaoyi" %% "scalatags" % "0.5.4",
-      "com.lihaoyi" %% "upickle" % "0.3.8",
+      "com.lihaoyi" %% "upickle" % "0.4.1",
       "net.databinder.dispatch" %% "dispatch-core" % "0.11.2",
       "org.scala-lang.modules" %% "scala-async" % "0.9.6-RC2",
       "org.scalatest" %% "scalatest" % "2.2.4" % "test",
