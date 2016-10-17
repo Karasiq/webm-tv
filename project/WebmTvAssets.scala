@@ -25,8 +25,11 @@ object WebmTvAssets {
   def style: String = {
     """
       |body {
-      |  background: url(/img/background.jpg);
-      |  background-size: 100% auto;
+      |  background: url(/img/background.jpg) no-repeat center center fixed;
+      |  -webkit-background-size: cover;
+      |  -moz-background-size: cover;
+      |  -o-background-size: cover;
+      |  background-size: cover;
       |}
       |@media (max-width: 424px) {
       |  .vjs-xs-hide {
