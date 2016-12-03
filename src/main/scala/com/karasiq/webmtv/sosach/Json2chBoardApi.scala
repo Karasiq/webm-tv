@@ -50,7 +50,7 @@ class Json2chBoardApi(host: String = "2ch.hk")(implicit as: ActorSystem, am: Act
   }
 
   private def jsonToAppPost(board: String, postObj: JsonApiObjects.Post): Board.Post = {
-    Board.Post(postObj.id, postObj.subject, postObj.comment, postObj.files.map(file ⇒ s"https://$host/$board/${file.path}"))
+    Board.Post(postObj.id, postObj.subject, postObj.comment, postObj.files.map(file ⇒ s"https://$host${file.path}"))
   }
 
   def board(name: String) = {
