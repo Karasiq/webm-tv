@@ -1,11 +1,11 @@
 package com.karasiq.webmtv.app
 
-import akka.actor.{Actor, ActorLogging, Props}
-import akka.stream.{ActorMaterializer, ActorMaterializerSettings}
-import com.karasiq.webmtv.sosach.{Board, BoardApi}
-import com.typesafe.config.ConfigFactory
-
 import scala.collection.JavaConversions._
+
+import akka.actor.{Actor, ActorLogging, Props}
+import akka.stream.ActorMaterializer
+
+import com.karasiq.webmtv.sosach.{Board, BoardApi}
 
 case class ScanBoard(board: String)
 case class ScanThread(board: String, id: Long)
@@ -14,15 +14,23 @@ case class RequestWebmList(board: Option[String] = None)
 case class WebmList(videos: Seq[String])
 
 class WebmThreadScanner(boardApi: BoardApi, store: WebmStore) extends Actor with ActorLogging {
-  private implicit val actorMaterializer = ActorMaterializer(ActorMaterializerSettings(context.system))
+  private[this] implicit val actorMaterializer = ActorMaterializer()
 
-  private val config = ConfigFactory.load().getConfig("webm-tv.sosach")
+  private[this] val config = context.system.settings.config.getConfig("webm-tv.sosach")
+  private[this] object settings {
+    val videoExtensions: Set[String] = config.getStringList("video-extensions").toSet
+    val includes: Seq[String] = config.getStringList("include-threads")
+    val excludes: Seq[String] = config.getStringList("exclude-threads")
+  }
 
-  private def threadFilter(thread: Board.Thread): Boolean = {
-    val includes = config.getStringList("include-threads")
-    val excludes = config.getStringList("exclude-threads")
-    ((includes.isEmpty && thread.posts.flatMap(_.files).exists(_.endsWith(".webm"))) || includes.exists(pt ⇒ pt.r.findFirstIn(thread.opPost.content.toLowerCase).isDefined)) &&
-      excludes.forall(pt ⇒ pt.r.findFirstIn(thread.opPost.content.toLowerCase).isEmpty)
+  private[this] def isVideoFile(file: String): Boolean = {
+    file.split("\\.").lastOption.exists(settings.videoExtensions.contains)
+  }
+
+  private[this] def isVideoThread(thread: Board.Thread): Boolean = {
+    ((settings.includes.isEmpty && thread.posts.flatMap(_.files).exists(isVideoFile)) ||
+      settings.includes.exists(pt ⇒ pt.r.findFirstIn(thread.opPost.content.toLowerCase).isDefined)) &&
+      settings.excludes.forall(pt ⇒ pt.r.findFirstIn(thread.opPost.content.toLowerCase).isEmpty)
   }
 
   override def receive: Actor.Receive = {
@@ -31,10 +39,8 @@ class WebmThreadScanner(boardApi: BoardApi, store: WebmStore) extends Actor with
       val self = context.self
       val sender = context.sender()
       boardApi.board(board)
-        .filter(threadFilter)
-        .runForeach { thread ⇒
-          self.tell(ScanThread(board, thread.id), sender)
-        }
+        .filter(isVideoThread)
+        .runForeach(thread ⇒ self.tell(ScanThread(board, thread.id), sender))
 
     case ScanThread(board, id) ⇒
       val sender = context.sender()
@@ -43,7 +49,7 @@ class WebmThreadScanner(boardApi: BoardApi, store: WebmStore) extends Actor with
       if (cached.isEmpty) {
         log.info("Rescanning thread: /{}/{}", board, id)
         boardApi.thread(board, id).runForeach { thread ⇒
-          val files = for (post ← thread.posts; file ← post.files if file.endsWith(".webm"))
+          val files = for (post ← thread.posts; file ← post.files if isVideoFile(file))
             yield file.replaceFirst("^https?://", "//")
           store.update(threadId, files)
           sender ! WebmList(files)
@@ -53,15 +59,13 @@ class WebmThreadScanner(boardApi: BoardApi, store: WebmStore) extends Actor with
 }
 
 class WebmStoreDispatcher(boardApi: BoardApi, store: WebmStore) extends Actor with ActorLogging {
-  private val config = ConfigFactory.load().getConfig("webm-tv.sosach")
-
-  private val boards = config.getStringList("boards").toSeq
-
-  private val threadScanner = context.actorOf(Props(classOf[WebmThreadScanner], boardApi, store), "threadScanner")
+  private[this] val config = context.system.settings.config.getConfig("webm-tv.sosach")
+  private[this] val boards = config.getStringList("boards").toSeq
+  private[this] val threadScanner = context.actorOf(Props(classOf[WebmThreadScanner], boardApi, store), "threadScanner")
 
   override def receive: Receive = {
     case RequestWebmList(Some(board)) ⇒
-      val videos = store.iterator.collect {
+      val videos = store.collect {
         case (ThreadId(`board`, _), files) ⇒
           files
       }.flatten

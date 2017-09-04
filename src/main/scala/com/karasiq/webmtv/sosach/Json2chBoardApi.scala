@@ -2,8 +2,8 @@ package com.karasiq.webmtv.sosach
 
 import akka.actor.ActorSystem
 import akka.http.scaladsl.Http
-import akka.http.scaladsl.model.headers.Accept
 import akka.http.scaladsl.model.{HttpRequest, MediaRange, MediaTypes}
+import akka.http.scaladsl.model.headers.Accept
 import akka.stream.ActorMaterializer
 import akka.stream.scaladsl.Source
 import akka.util.ByteString
@@ -42,11 +42,11 @@ class Json2chBoardApi(host: String = "2ch.hk")(implicit as: ActorSystem, am: Act
   private def retrieveJson[T: Reader](url: String) = {
     Source
       .fromFuture(http.singleRequest(HttpRequest(uri = url, headers = List(Accept(MediaRange(MediaTypes.`application/json`))))))
-      .log("2ch-json-api")
       .filter(_.status.isSuccess())
       .flatMapConcat(_.entity.dataBytes)
       .fold(ByteString.empty)(_ ++ _)
       .map(bs ⇒ read[T](bs.utf8String))
+      .log("2ch-json-api")
   }
 
   private def jsonToAppPost(board: String, postObj: JsonApiObjects.Post): Board.Post = {

@@ -1,5 +1,7 @@
 package com.karasiq.webmtv.sosach
 
+import scala.collection.JavaConversions._
+
 import akka.NotUsed
 import akka.actor.ActorSystem
 import akka.http.scaladsl.Http
@@ -7,11 +9,10 @@ import akka.http.scaladsl.model.HttpRequest
 import akka.stream.ActorMaterializer
 import akka.stream.scaladsl.Source
 import akka.util.ByteString
-import com.karasiq.webmtv.sosach.Board.Thread
 import org.jsoup.Jsoup
 import org.jsoup.nodes.Document
 
-import scala.collection.JavaConversions._
+import com.karasiq.webmtv.sosach.Board.Thread
 
 class M2chBoardApi(implicit as: ActorSystem, am: ActorMaterializer) extends BoardApi {
   private val http = Http()
@@ -19,11 +20,11 @@ class M2chBoardApi(implicit as: ActorSystem, am: ActorMaterializer) extends Boar
   private def htmlPage(url: String): Source[Document, NotUsed] = {
     Source
       .fromFuture(http.singleRequest(HttpRequest(uri = url)))
-      .log("m2ch-html-api")
       .filter(_.status.isSuccess())
       .flatMapConcat(_.entity.dataBytes)
       .fold(ByteString.empty)(_ ++ _)
       .map(bs ⇒ Jsoup.parse(bs.utf8String, url))
+      .log("m2ch-html-api")
   }
 
   private def replaceDomain(url: String): String = {
