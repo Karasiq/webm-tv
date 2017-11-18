@@ -3,7 +3,7 @@
 ![WebM TV](https://raw.github.com/Karasiq/webm-tv/master/images/screenshot.png)
 
 # On OpenShift
-https://webm-sj9.rhcloud.com/
+https://webm-tv-webm-tv.7e14.starter-us-west-2.openshiftapps.com
 
 # How to use
 * Download and extract [application package](https://github.com/Karasiq/webm-tv/releases/download/v1.1.0/webm-tv-1.1.0.zip)
