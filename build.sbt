@@ -100,10 +100,15 @@ lazy val frontendSettings = Seq(
   )
 )
 
+lazy val dockerSettings = Seq(
+  dockerExposedPorts := Seq(8900),
+  dockerRepository := Some("pistonkarasiq")
+)
+
 // Projects
 lazy val backend = project.in(file("."))
   .settings(commonSettings, backendSettings)
-  .enablePlugins(ScalaJSBundlerPlugin, JavaAppPackaging)
+  .enablePlugins(ScalaJSBundlerPlugin, JavaAppPackaging, DockerPlugin)
 
 lazy val frontend = project.in(file("frontend"))
   .settings(commonSettings, frontendSettings)
