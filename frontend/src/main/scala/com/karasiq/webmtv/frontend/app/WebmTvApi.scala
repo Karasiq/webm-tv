@@ -1,23 +1,33 @@
 package com.karasiq.webmtv.frontend.app
 
-import org.scalajs.dom.ext.Ajax
-import upickle.default._
-
 import scala.concurrent.Future
-import scala.scalajs.concurrent.JSExecutionContext.Implicits.queue
 import scala.scalajs.js
 
-object WebmTvApi {
-  private def ajax[T: Reader](url: String): Future[T] = {
-    Ajax.get(url)
-      .map(r ⇒ read[T](r.responseText))
+import org.scalajs.dom.ext.Ajax
+
+trait WebmTvApi {
+  final type VideoList = Seq[String]
+  def getVideos(boardId: Option[String] = None): Future[VideoList]
+}
+
+class JsonWebmTvApi extends WebmTvApi {
+  import scala.scalajs.concurrent.JSExecutionContext.Implicits.queue
+
+  import upickle.default._
+
+  private[this] val DefaultTimeout = 5000
+
+  private[this] def doAjaxRequest[T: Reader](url: String): Future[T] = {
+    Ajax.get(url, timeout = DefaultTimeout).map(r ⇒ read[T](r.responseText))
   }
 
   def getVideos(boardId: Option[String] = None): Future[Seq[String]] = boardId match {
     case Some(board) ⇒
-      ajax[Seq[String]](s"/$board/videos.json?timestamp=${js.Date.now()}")
+      doAjaxRequest[Seq[String]](s"/$board/videos.json?timestamp=${js.Date.now()}")
 
     case None ⇒
-      ajax[Seq[String]](s"/videos.json?timestamp=${js.Date.now()}")
+      doAjaxRequest[Seq[String]](s"/videos.json?timestamp=${js.Date.now()}")
   }
 }
+
+object WebmTvApi extends JsonWebmTvApi
