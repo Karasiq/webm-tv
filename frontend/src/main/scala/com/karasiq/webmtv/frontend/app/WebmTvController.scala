@@ -31,17 +31,20 @@ trait WebmTvController { self: AppStorage ⇒
   board.trigger(updateVideos())
 
   def updateVideos(): Future[Seq[String]] = {
-    val promise = Promise[Seq[String]]
+    type Videos = Seq[String]
 
-    WebmTvApi.getVideos(board.now) onComplete {
-      case Success(newVideos) ⇒
-        promise.success(Random.shuffle(newVideos))
+    def completePromise(promise: Promise[Videos] = Promise[Videos]): Future[Videos] = {
+      WebmTvApi.getVideos(board.now) onComplete {
+        case Success(newVideos) ⇒
+          promise.success(Random.shuffle(newVideos))
 
-      case Failure(_) ⇒
-        dom.window.setTimeout(() ⇒ promise.completeWith(updateVideos()), 1000)
+        case Failure(_) ⇒
+          dom.window.setTimeout(() ⇒ completePromise(promise), 1000)
+      }
+      promise.future
     }
 
-    val future = promise.future
+    val future = completePromise()
     future.foreach(videos.update)
     future
   }
