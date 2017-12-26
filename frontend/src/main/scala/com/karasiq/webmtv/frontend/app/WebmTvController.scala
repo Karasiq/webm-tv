@@ -1,12 +1,14 @@
 package com.karasiq.webmtv.frontend.app
 
-import com.karasiq.webmtv.frontend.utils.{AppStorage, RxLocation}
+import scala.concurrent.{Future, Promise}
+import scala.scalajs.concurrent.JSExecutionContext.Implicits.queue
+import scala.util.{Failure, Random, Success}
+
+import org.scalajs.dom
 import rx._
 import upickle.default._
 
-import scala.concurrent.Future
-import scala.scalajs.concurrent.JSExecutionContext.Implicits.queue
-import scala.util.Random
+import com.karasiq.webmtv.frontend.utils.{AppStorage, RxLocation}
 
 trait WebmTvController { self: AppStorage ⇒
   implicit final val rxContext: Ctx.Owner = Ctx.Owner.Unsafe
@@ -29,7 +31,17 @@ trait WebmTvController { self: AppStorage ⇒
   board.trigger(updateVideos())
 
   def updateVideos(): Future[Seq[String]] = {
-    val future = WebmTvApi.getVideos(board.now).map(Random.shuffle(_))
+    val promise = Promise[Seq[String]]
+
+    WebmTvApi.getVideos(board.now) onComplete {
+      case Success(newVideos) ⇒
+        promise.success(Random.shuffle(newVideos))
+
+      case Failure(_) ⇒
+        dom.window.setTimeout(() ⇒ promise.completeWith(updateVideos()), 1000)
+    }
+
+    val future = promise.future
     future.foreach(videos.update)
     future
   }
