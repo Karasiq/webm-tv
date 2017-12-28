@@ -1,19 +1,21 @@
 package com.karasiq.webmtv.app
 
-import akka.actor.{ActorRef, ActorSystem}
-import akka.http.scaladsl.marshalling.{Marshaller, ToEntityMarshaller}
-import akka.http.scaladsl.model._
-import akka.http.scaladsl.server.Directives._
-import akka.pattern.{AskTimeoutException, ask}
-import akka.stream.ActorMaterializer
-import akka.util.Timeout
-import upickle.default._
-
 import scala.concurrent.Future
 import scala.concurrent.duration._
 import scala.language.postfixOps
 
-final class Server(store: ActorRef)(implicit as: ActorSystem, am: ActorMaterializer)  {
+import akka.actor.{ActorRef, ActorSystem}
+import akka.http.scaladsl.marshalling.{Marshaller, ToEntityMarshaller}
+import akka.http.scaladsl.model._
+import akka.http.scaladsl.server.Directives._
+import akka.pattern.{ask, AskTimeoutException}
+import akka.stream.ActorMaterializer
+import akka.util.Timeout
+import upickle.default._
+
+import com.karasiq.webmtv.app.WebmStoreDispatcher.{RequestWebmList, WebmList}
+
+final class WebmTvServer(store: ActorRef)(implicit as: ActorSystem, am: ActorMaterializer)  {
   import as.dispatcher
 
   private implicit def defaultMarshaller[T: Writer]: ToEntityMarshaller[T] = {

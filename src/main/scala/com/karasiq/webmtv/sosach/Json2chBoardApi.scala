@@ -1,5 +1,7 @@
 package com.karasiq.webmtv.sosach
 
+import scala.language.implicitConversions
+
 import akka.actor.ActorSystem
 import akka.http.scaladsl.Http
 import akka.http.scaladsl.model.{HttpRequest, MediaRange, MediaTypes}

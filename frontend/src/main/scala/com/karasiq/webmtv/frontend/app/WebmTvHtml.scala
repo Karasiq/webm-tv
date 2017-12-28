@@ -1,5 +1,11 @@
 package com.karasiq.webmtv.frontend.app
 
+import scala.scalajs.concurrent.JSExecutionContext.Implicits.queue
+import scalatags.JsDom.all._
+
+import org.scalajs.dom.{document, window, KeyboardEvent}
+import rx._
+
 import com.karasiq.bootstrap.BootstrapImplicits._
 import com.karasiq.bootstrap.grid.GridSystem
 import com.karasiq.bootstrap.icons.FontAwesome
@@ -7,11 +13,6 @@ import com.karasiq.bootstrap.popover.Popover
 import com.karasiq.videojs._
 import com.karasiq.webmtv.frontend.utils.HammerJS
 import com.karasiq.webmtv.frontend.utils.WebmTvPlayerUtils._
-import org.scalajs.dom.{KeyboardEvent, document, window}
-import rx._
-
-import scala.scalajs.concurrent.JSExecutionContext.Implicits.queue
-import scalatags.JsDom.all._
 
 trait WebmTvHtml { self: WebmTvController ⇒
   def videoContainer(videoModifiers: Modifier*): Tag = {
@@ -20,11 +21,14 @@ trait WebmTvHtml { self: WebmTvController ⇒
       .fluid(true)
       .ready { player ⇒
         def nextVideo(): Unit = {
+          history() = history.now ++ videoSource.now
           seen() = seen.now ++ videoSource.now
         }
 
         def previousVideo(): Unit = {
-          seen() = seen.now.dropRight(1)
+          val video = history.now.lastOption
+          history() = history.now.dropRight(1)
+          seen() = seen.now -- video
         }
 
         var reshuffling = false
@@ -47,14 +51,16 @@ trait WebmTvHtml { self: WebmTvController ⇒
         }
 
         val showPrevious = Rx {
-          val seenVideos = seen()
+          val seenVideos = history()
           val currentVideo = videoSource()
           seenVideos.nonEmpty && currentVideo.isDefined && {
             val allVideos = videos()
-            val index = allVideos.indexOf(seenVideos.last)
-            index != -1 && index == (allVideos.indexOf(currentVideo.get) - 1)
+            val prevIndex = allVideos.indexOf(seenVideos.last)
+            val currentIndex = allVideos.indexOf(currentVideo.get)
+            prevIndex != -1 && prevIndex == (currentIndex - 1)
           }
         }
+
         val loopIcon = Rx[Tag](if (loop()) "repeat".fontAwesome(FontAwesome.spin) else "repeat".fontAwesome())
         val vjsXsHide = "vjs-xs-hide".addClass
 
