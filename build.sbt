@@ -5,7 +5,7 @@ lazy val commonSettings = Seq(
   organization := "com.github.karasiq",
   version := "1.1.1",
   isSnapshot := version.value.endsWith("SNAPSHOT"),
-  scalaVersion := "2.11.8",
+  scalaVersion := "2.11.11",
   publishMavenStyle := true,
   publishTo := {
     val nexus = "https://oss.sonatype.org/"
@@ -51,7 +51,7 @@ lazy val backendSettings = Seq(
       "org.mapdb" % "mapdb" % "2.0-beta12"
     )
   },
-  mainClass in Compile := Some("com.karasiq.webmtv.app.Main"),
+  mainClass in Compile := Some("com.karasiq.webmtv.app.WebmTvMain"),
   scalaJsBundlerInline in Compile := true,
   scalaJsBundlerCompile in Compile <<= (scalaJsBundlerCompile in Compile).dependsOn(fullOptJS in Compile in frontend),
   scalaJsBundlerAssets in Compile += {
@@ -102,7 +102,8 @@ lazy val frontendSettings = Seq(
 
 lazy val dockerSettings = Seq(
   dockerExposedPorts := Seq(8900),
-  dockerRepository := Some("pistonkarasiq")
+  dockerRepository := Some("pistonkarasiq"),
+  dockerUpdateLatest := true
 )
 
 // Projects
