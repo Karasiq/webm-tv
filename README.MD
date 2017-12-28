@@ -6,7 +6,7 @@
 https://webm-tv-webm-tv.7e14.starter-us-west-2.openshiftapps.com
 
 # How to use
-* Download and extract [application package](https://github.com/Karasiq/webm-tv/releases/download/v1.1.0/webm-tv-1.1.0.zip)
+* Download and extract [application package](https://github.com/Karasiq/webm-tv/releases/download/v1.1.2/webm-tv-1.1.2.zip)
 * Enter `./bin/webm-tv` in console
 * Open http://127.0.0.1:8900/ in your browser
 * To specify video source, add board identifier to URL hash tag, like http://127.0.0.1:8900/#po
