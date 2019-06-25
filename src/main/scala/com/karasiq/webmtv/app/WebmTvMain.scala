@@ -2,18 +2,17 @@ package com.karasiq.webmtv.app
 
 import java.util.concurrent.TimeUnit
 
-import scala.concurrent.Await
-import scala.concurrent.duration._
-import scala.language.postfixOps
-import scala.util.{Failure, Success}
-
 import akka.actor._
 import akka.http.scaladsl.Http
 import akka.http.scaladsl.Http.ServerBinding
 import akka.stream.ActorMaterializer
 import akka.util.Timeout
-
 import com.karasiq.webmtv.sosach.Json2chBoardApi
+
+import scala.concurrent.Await
+import scala.concurrent.duration._
+import scala.language.postfixOps
+import scala.util.{Failure, Success}
 
 object WebmTvMain extends App {
   def startup(): Unit = {
@@ -24,7 +23,7 @@ object WebmTvMain extends App {
     implicit val materializer = ActorMaterializer()
 
     val config = actorSystem.settings.config.getConfig("webm-tv")
-    val boardApi = new Json2chBoardApi(config.getString("sosach.host"))
+    val boardApi = new Json2chBoardApi(config.getString("sosach.host"), config.getString("sosach.usercode-auth"))
 
     val store = WebmHeapStore //WebmFileStore
     val storeDispatcher = actorSystem.actorOf(WebmStoreDispatcher.props(boardApi, store), "storeDispatcher")
