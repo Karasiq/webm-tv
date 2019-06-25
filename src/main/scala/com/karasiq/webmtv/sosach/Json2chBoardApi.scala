@@ -1,17 +1,17 @@
 package com.karasiq.webmtv.sosach
 
-import scala.language.implicitConversions
-
 import akka.actor.ActorSystem
 import akka.http.scaladsl.Http
+import akka.http.scaladsl.model.headers.{Accept, Cookie}
 import akka.http.scaladsl.model.{HttpRequest, MediaRange, MediaTypes}
-import akka.http.scaladsl.model.headers.Accept
 import akka.stream.ActorMaterializer
 import akka.stream.scaladsl.Source
 import akka.util.ByteString
 import derive.key
 import upickle.Js
 import upickle.default._
+
+import scala.language.implicitConversions
 
 private object JsonApiObjects {
   case class PostId(value: Long) extends AnyVal
@@ -36,14 +36,16 @@ private object JsonApiObjects {
   }
 }
 
-class Json2chBoardApi(host: String = "2ch.hk")(implicit as: ActorSystem, am: ActorMaterializer) extends BoardApi {
-  import JsonApiObjects.Implicits._
+class Json2chBoardApi(host: String = "2ch.hk", usercodeAuth: String = "")(implicit as: ActorSystem, am: ActorMaterializer) extends BoardApi {
 
   private val http = Http()
 
   private def retrieveJson[T: Reader](url: String) = {
     Source
-      .fromFuture(http.singleRequest(HttpRequest(uri = url, headers = List(Accept(MediaRange(MediaTypes.`application/json`))))))
+      .fromFuture(http.singleRequest(HttpRequest(uri = url, headers = List(
+        Accept(MediaRange(MediaTypes.`application/json`)),
+        Cookie("usercode_auth", usercodeAuth)
+      ))))
       .filter(_.status.isSuccess())
       .flatMapConcat(_.entity.dataBytes)
       .fold(ByteString.empty)(_ ++ _)
