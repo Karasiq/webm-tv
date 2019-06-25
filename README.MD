@@ -2,8 +2,8 @@
 [2ch.hk](https://2ch.hk/b/) WebM TV, written in [Scala](http://scala-lang.org/).
 ![WebM TV](https://raw.github.com/Karasiq/webm-tv/master/images/screenshot.jpg)
 
-# On OpenShift
-https://webm-tv-webm-tv.7e14.starter-us-west-2.openshiftapps.com
+# Hosted at
+https://2ch.video
 
 # How to use
 * Download and extract [application package](https://github.com/Karasiq/webm-tv/releases/download/v1.1.2/webm-tv-1.1.2.zip)
