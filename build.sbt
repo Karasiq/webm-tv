@@ -3,7 +3,7 @@ import com.karasiq.scalajsbundler.dsl.{Script, _}
 // Settings
 lazy val commonSettings = Seq(
   organization := "com.github.karasiq",
-  version := "1.1.2",
+  version := "1.1.3",
   isSnapshot := version.value.endsWith("SNAPSHOT"),
   scalaVersion := "2.11.11",
   publishMavenStyle := true,
@@ -47,8 +47,8 @@ lazy val backendSettings = Seq(
       "org.scalatest" %% "scalatest" % "2.2.4" % "test",
       "com.typesafe" % "config" % "1.3.0",
       "org.slf4j" % "slf4j-simple" % "1.7.13",
-      "com.github.karasiq" %% "mapdbutils" % "1.1.1",
-      "org.mapdb" % "mapdb" % "2.0-beta12"
+      "com.google.guava" % "guava" % "28.0-jre",
+      "com.github.karasiq" %% "commons-configs" % "1.0.11"
     )
   },
   mainClass in Compile := Some("com.karasiq.webmtv.app.WebmTvMain"),

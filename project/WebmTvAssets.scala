@@ -26,6 +26,10 @@ object WebmTvAssets {
     """
       |body {
       |  background: url(/img/background.jpg) no-repeat center center fixed;
+      |  -webkit-background-size: 100%;
+      |  -moz-background-size: 100%;
+      |  -o-background-size: 100%;
+      |  background-size: 100%;
       |  -webkit-background-size: cover;
       |  -moz-background-size: cover;
       |  -o-background-size: cover;
