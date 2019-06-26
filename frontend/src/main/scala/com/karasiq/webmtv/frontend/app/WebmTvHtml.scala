@@ -117,6 +117,20 @@ trait WebmTvHtml { self: WebmTvController ⇒
           }
         })
 
+        var errors = 0
+        player.on("error", () => {
+          if (errors < 10) {
+            errors += 1
+            nextVideo()
+          } else {
+            org.scalajs.dom.console.error("Too many errors")
+          }
+        })
+
+        player.on("canplay", () => {
+          errors = 0
+        })
+
         videoSource.foreach {
           case Some(url) ⇒
             player.src(VideoSource("video/webm", url))
