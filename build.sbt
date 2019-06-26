@@ -102,7 +102,7 @@ lazy val frontendSettings = Seq(
 
 lazy val dockerSettings = Seq(
   dockerExposedPorts := Seq(8900),
-  dockerUsername := Some("pistonkarasiq"),
+  dockerUsername := Some("karasiq"),
   dockerUpdateLatest := true
 )
 
