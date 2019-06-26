@@ -101,6 +101,7 @@ lazy val frontendSettings = Seq(
 )
 
 lazy val dockerSettings = Seq(
+  dockerBaseImage := "openjdk:8-jre-stretch",
   dockerExposedPorts := Seq(8900),
   dockerUsername := Some("karasiq"),
   dockerUpdateLatest := true
