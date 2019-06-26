@@ -14,9 +14,19 @@ import upickle.default._
 import scala.language.implicitConversions
 
 private object JsonApiObjects {
-  case class PostId(value: Long) extends AnyVal
+  final case class PostId(value: Long) extends AnyVal
   object PostId {
     implicit def postIdToLong(postId: PostId): Long = postId.value
+
+    implicit val postIdReader: Reader[PostId] = Reader[PostId] {
+      case Js.Str(str) ⇒
+        PostId(str.toLong)
+
+      case Js.Num(num) ⇒
+        PostId(num.toLong)
+    }
+
+    implicit val postIdWriter: Writer[PostId] = Writer[PostId](postId => Js.Str(postId.value.toString))
   }
 
   case class File(path: String)
@@ -24,38 +34,10 @@ private object JsonApiObjects {
   case class Thread(posts: Seq[Post])
   case class Board(@key("Board") name: String, pages: Seq[Int], threads: Seq[Thread])
   case class ThreadWrapped(@key("Board") board: String, @key("threads") thread: Option[Thread])
-
-  object Implicits {
-    implicit val postIdReader = Reader[PostId] {
-      case Js.Str(str) ⇒
-        PostId(str.toLong)
-
-      case Js.Num(num) ⇒
-        PostId(num.toLong)
-    }
-  }
 }
 
 class Json2chBoardApi(host: String = "2ch.hk", usercodeAuth: String = "")(implicit as: ActorSystem, am: ActorMaterializer) extends BoardApi {
-
-  private val http = Http()
-
-  private def retrieveJson[T: Reader](url: String) = {
-    Source
-      .fromFuture(http.singleRequest(HttpRequest(uri = url, headers = List(
-        Accept(MediaRange(MediaTypes.`application/json`)),
-        Cookie("usercode_auth", usercodeAuth)
-      ))))
-      .filter(_.status.isSuccess())
-      .flatMapConcat(_.entity.dataBytes)
-      .fold(ByteString.empty)(_ ++ _)
-      .map(bs ⇒ read[T](bs.utf8String))
-      .log("2ch-json-api")
-  }
-
-  private def jsonToAppPost(board: String, postObj: JsonApiObjects.Post): Board.Post = {
-    Board.Post(postObj.id, postObj.subject, postObj.comment, postObj.files.map(file ⇒ s"https://$host${file.path}"))
-  }
+  import JsonApiObjects.PostId._
 
   def board(name: String) = {
     val url = s"https://$host/$name/index.json"
@@ -72,11 +54,31 @@ class Json2chBoardApi(host: String = "2ch.hk", usercodeAuth: String = "")(implic
           yield Board.Thread(board.name, threadObj.posts.map(jsonToAppPost(board.name, _)))
         threads.toVector
       }
+      .named(s"board-$name")
   }
 
   def thread(board: String, id: Long) = {
     val url = s"https://$host/$board/res/$id.json"
     retrieveJson[JsonApiObjects.ThreadWrapped](url)
       .map(thread ⇒ Board.Thread(thread.board, thread.thread.toSeq.flatMap(_.posts.map(jsonToAppPost(thread.board, _)))))
+      .named(s"thread-$board-$id")
+  }
+
+  private[this] def retrieveJson[T: Reader](url: String) = {
+    Source
+      .fromFuture(Http().singleRequest(HttpRequest(uri = url, headers = List(
+        Accept(MediaRange(MediaTypes.`application/json`)),
+        Cookie("usercode_auth", usercodeAuth)
+      ))))
+      .filter(_.status.isSuccess())
+      .flatMapConcat(_.entity.dataBytes)
+      .fold(ByteString.empty)(_ ++ _)
+      .filter(_.nonEmpty)
+      .map(bs ⇒ read[T](bs.utf8String))
+      .log("2ch-json-api")
+  }
+
+  private[this] def jsonToAppPost(board: String, postObj: JsonApiObjects.Post): Board.Post = {
+    Board.Post(postObj.id, postObj.subject, postObj.comment, postObj.files.map(file ⇒ s"https://$host${file.path}"))
   }
 }

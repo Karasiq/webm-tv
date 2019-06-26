@@ -1,19 +1,18 @@
 package com.karasiq.webmtv.app
 
-import scala.concurrent.Future
-import scala.concurrent.duration._
-import scala.language.postfixOps
-
 import akka.actor.{ActorRef, ActorSystem}
 import akka.http.scaladsl.marshalling.{Marshaller, ToEntityMarshaller}
 import akka.http.scaladsl.model._
 import akka.http.scaladsl.server.Directives._
-import akka.pattern.{ask, AskTimeoutException}
+import akka.pattern.{AskTimeoutException, ask}
 import akka.stream.ActorMaterializer
 import akka.util.Timeout
+import com.karasiq.webmtv.app.WebmStoreDispatcher.{RequestWebmList, WebmList}
 import upickle.default._
 
-import com.karasiq.webmtv.app.WebmStoreDispatcher.{RequestWebmList, WebmList}
+import scala.concurrent.Future
+import scala.concurrent.duration._
+import scala.language.postfixOps
 
 final class WebmTvServer(store: ActorRef)(implicit as: ActorSystem, am: ActorMaterializer)  {
   import as.dispatcher
@@ -43,6 +42,9 @@ final class WebmTvServer(store: ActorRef)(implicit as: ActorSystem, am: ActorMat
         } ~
         path("videos.json") {
           complete(StatusCodes.OK, videoList(None))
+        } ~
+        path("[\\w]+".r) { board =>
+          redirect(s"/#$board", StatusCodes.Found)
         } ~
         // Index page
         pathEndOrSingleSlash {

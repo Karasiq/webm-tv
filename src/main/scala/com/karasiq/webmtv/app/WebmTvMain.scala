@@ -7,6 +7,7 @@ import akka.http.scaladsl.Http
 import akka.http.scaladsl.Http.ServerBinding
 import akka.stream.ActorMaterializer
 import akka.util.Timeout
+import com.karasiq.common.configs.ConfigImplicits._
 import com.karasiq.webmtv.sosach.Json2chBoardApi
 
 import scala.concurrent.Await
@@ -25,7 +26,7 @@ object WebmTvMain extends App {
     val config = actorSystem.settings.config.getConfig("webm-tv")
     val boardApi = new Json2chBoardApi(config.getString("sosach.host"), config.getString("sosach.usercode-auth"))
 
-    val store = WebmHeapStore //WebmFileStore
+    val store = new WebmInMemStore(config.getFiniteDuration("thread-ttl"))
     val storeDispatcher = actorSystem.actorOf(WebmStoreDispatcher.props(boardApi, store), "storeDispatcher")
     val server = new WebmTvServer(storeDispatcher)
 
@@ -38,15 +39,10 @@ object WebmTvMain extends App {
         actorSystem.terminate()
     }
 
-    Runtime.getRuntime.addShutdownHook(new Thread(new Runnable {
-      override def run(): Unit = {
-        actorSystem.log.info("Shutting down Webm-TV server")
-        actorSystem.registerOnTermination {
-          store.close()
-        }
-        Await.result(actorSystem.terminate(), FiniteDuration(5, TimeUnit.MINUTES))
-      }
-    }))
+    sys.addShutdownHook {
+      actorSystem.log.info("Shutting down Webm-TV server")
+      Await.result(actorSystem.terminate(), FiniteDuration(5, TimeUnit.MINUTES))
+    }
   }
 
   startup()
