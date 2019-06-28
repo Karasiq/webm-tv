@@ -3,7 +3,7 @@ import com.karasiq.scalajsbundler.dsl.{Script, _}
 // Settings
 lazy val commonSettings = Seq(
   organization := "com.github.karasiq",
-  version := "1.1.3",
+  version := "1.2.0",
   isSnapshot := version.value.endsWith("SNAPSHOT"),
   scalaVersion := "2.11.11",
   publishMavenStyle := true,
@@ -52,7 +52,7 @@ lazy val backendSettings = Seq(
     )
   },
   mainClass in Compile := Some("com.karasiq.webmtv.app.WebmTvMain"),
-  scalaJsBundlerInline in Compile := true,
+  scalaJsBundlerInline in Compile := false,
   scalaJsBundlerCompile in Compile <<= (scalaJsBundlerCompile in Compile).dependsOn(fullOptJS in Compile in frontend),
   scalaJsBundlerAssets in Compile += {
     val bootstrap = github("twbs", "bootstrap", "v3.3.6") / "dist"

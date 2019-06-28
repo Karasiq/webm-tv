@@ -2,10 +2,8 @@ package com.karasiq.webmtv.frontend.app
 
 import scala.scalajs.concurrent.JSExecutionContext.Implicits.queue
 import scalatags.JsDom.all._
-
-import org.scalajs.dom.{document, window, KeyboardEvent}
+import org.scalajs.dom.{Element, KeyboardEvent, document, window}
 import rx._
-
 import com.karasiq.bootstrap.BootstrapImplicits._
 import com.karasiq.bootstrap.grid.GridSystem
 import com.karasiq.bootstrap.icons.FontAwesome
@@ -13,9 +11,38 @@ import com.karasiq.bootstrap.popover.Popover
 import com.karasiq.videojs._
 import com.karasiq.webmtv.frontend.utils.HammerJS
 import com.karasiq.webmtv.frontend.utils.WebmTvPlayerUtils._
+import org.scalajs.dom.raw.{HTMLElement, MouseEvent}
 
-trait WebmTvHtml { self: WebmTvController ⇒
+trait WebmTvHtml {
+  self: WebmTvController ⇒
   def videoContainer(videoModifiers: Modifier*): Tag = {
+    val sfwMode = Var(false)
+
+    val sfwModifier = new Modifier {
+      override def applyTo(t: Element): Unit = {
+        t.addEventListener("mousemove", (e: MouseEvent) => {
+          if (sfwMode.now) {
+            val maxDist = math.sqrt(math.pow(t.clientWidth, 2) + math.pow(t.clientHeight, 2))/2
+
+            val rect = t.getBoundingClientRect()
+            val (centerX, centerY) = (
+              rect.left + rect.width / 2,
+              rect.top + rect.height / 2
+            )
+
+            val (mouseX, mouseY) = (e.pageX, e.pageY)
+            val dist = math.hypot(centerX - mouseX, centerY - mouseY)
+
+            org.scalajs.dom.console.log(dist + " of " + maxDist)
+            val opacityV = ((maxDist - dist) / maxDist) min 1 max 0.01
+            t.asInstanceOf[HTMLElement].style.opacity = opacityV.toString
+          } else {
+            t.asInstanceOf[HTMLElement].style.opacity = "1"
+          }
+        })
+      }
+    }
+
     val video = VideoJSBuilder()
       .options("bigPlayButton" → false, "loadingSpinner" → false)
       .fluid(true)
@@ -32,6 +59,7 @@ trait WebmTvHtml { self: WebmTvController ⇒
         }
 
         var reshuffling = false
+
         def reshuffle(): Unit = {
           if (!reshuffling) {
             reshuffling = true
@@ -73,29 +101,30 @@ trait WebmTvHtml { self: WebmTvController ⇒
 
         // Hotkeys
         document.addEventListener("keydown", (e: KeyboardEvent) ⇒ {
-          e.keyCode match {
+          val pf: PartialFunction[Int, Unit] = {
             case 37 if showPrevious.now ⇒ // Left arrow
-              e.preventDefault()
               previousVideo()
 
             case 39 ⇒ // Right arrow
-              e.preventDefault()
               nextVideo()
 
             case 68 if e.shiftKey ⇒ // Shift+D
-              e.preventDefault()
               downloadVideo()
 
             case 76 if e.shiftKey ⇒ // Shift+L
-              e.preventDefault()
               toggleLoop()
 
             case 82 if e.shiftKey ⇒ // Shift+R
               e.preventDefault()
               reshuffle()
 
-            case _ ⇒
-            // Skip
+            case 83 if e.shiftKey => // Shift+S
+              sfwMode() = !sfwMode.now
+          }
+
+          if (pf.isDefinedAt(e.keyCode)) {
+            e.preventDefault()
+            pf(e.keyCode)
           }
         })
 
@@ -143,7 +172,7 @@ trait WebmTvHtml { self: WebmTvController ⇒
       }
       .build()
 
-    val boards = Seq("b", "po", "tv", "e", "a")
+    val boards = Seq("b", "v", "po", "tv", "e", "a")
     div(`class` := "jumbotron", textAlign := "center", backgroundColor := "rgba(238, 238, 238, 0.2)")(
       // Heading
       GridSystem.mkRow(
@@ -160,7 +189,8 @@ trait WebmTvHtml { self: WebmTvController ⇒
                 li("⇒ - next video"),
                 li("Shift+R - reshuffle"),
                 li("Shift+L - toggle loop"),
-                li("Shift+D - download")
+                li("Shift+D - download"),
+                li("Shift+S - SFW mode")
               ),
               b("Gestures"),
               ul(
@@ -182,7 +212,7 @@ trait WebmTvHtml { self: WebmTvController ⇒
 
       // Video player
       GridSystem.mkRow(
-        div(video, videoModifiers)
+        div(video, sfwModifier, videoModifiers)
       )
     )
   }
