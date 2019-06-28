@@ -190,7 +190,10 @@ trait WebmTvHtml {
                 li("Shift+R - reshuffle"),
                 li("Shift+L - toggle loop"),
                 li("Shift+D - download"),
-                li("Shift+S - SFW mode")
+                li("Shift+S - ", a(href := "#", "SFW mode", "text-success".classIf(sfwMode), onclick := { e: MouseEvent =>
+                  e.preventDefault()
+                  sfwMode() = !sfwMode.now
+                }))
               ),
               b("Gestures"),
               ul(
