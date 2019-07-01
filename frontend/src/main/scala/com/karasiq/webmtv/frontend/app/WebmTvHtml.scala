@@ -33,7 +33,7 @@ trait WebmTvHtml {
             val (mouseX, mouseY) = (e.pageX, e.pageY)
             val dist = math.hypot(centerX - mouseX, centerY - mouseY)
 
-            org.scalajs.dom.console.log(dist + " of " + maxDist)
+            // org.scalajs.dom.console.log(dist + " of " + maxDist)
             val opacityV = ((maxDist - dist) / maxDist) min 1 max 0.01
             t.asInstanceOf[HTMLElement].style.opacity = opacityV.toString
           } else {
