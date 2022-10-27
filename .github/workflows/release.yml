@@ -1,0 +1,62 @@
+name: Create release package
+
+on:
+  pull_request:
+    branches:
+      - master
+  push:
+    branches:
+      - master
+    tags:
+      - v[0-9].[0-9]+.[0-9]+
+
+jobs:
+  build-linux:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+      - name: Get version
+        id: version
+        run: |
+          git fetch --prune --unshallow
+          git checkout master
+          GitMessage=$(git log -1 --pretty=%B)
+          VersionMsgRegex='Version ([0-9]+\.[0-9]+\.?[0-9]*).*'
+          if [[ $GitMessage =~ $VersionMsgRegex ]]; then
+            Version="${BASH_REMATCH[1]}"
+          else
+            VersionTag=$(git describe --tags --abbrev=0)
+            Version="${VersionTag:1}"
+          fi
+          echo "::set-output name=version::$Version"
+      - name: Set up JDK 1.8
+        uses: actions/setup-java@v1
+        with:
+          java-version: 1.8
+      - name: Cache SBT
+        uses: actions/cache@v2
+        with:
+          path: |
+            ~/.sbt/boot
+            ~/.cache/coursier
+            **/target
+          key: webm-tv-target-${{ hashFiles('**/src/main/**/*.scala', 'build.sbt', 'project/*.scala', 'project/*.sbt') }}
+          restore-keys: |
+            webm-tv-target-
+      - name: Package ZIP
+        run: |
+          Version="${{steps.version.outputs.version}}"
+          Universal="${{github.workspace}}/target/universal"
+          JAVA_OPTS="-Xmx4G"
+          sbt universal:packageBin
+      - name: Release
+        if: contains(github.ref, '/tags/')
+        uses: softprops/action-gh-release@v1
+        with:
+          files: |
+            ${{github.workspace}}/target/universal/*.zip
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      - name: Cleanup
+        run: |
+          rm -f "${{github.workspace}}/target/universal/*.zip"
