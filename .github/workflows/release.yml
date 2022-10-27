@@ -49,6 +49,12 @@ jobs:
           Universal="${{github.workspace}}/target/universal"
           JAVA_OPTS="-Xmx4G"
           sbt universal:packageBin
+      - name: Upload artifacts
+        uses: actions/upload-artifact@v3
+        with:
+          name: app-packages
+          path: |
+            ${{github.workspace}}/target/universal/*.zip
       - name: Release
         if: contains(github.ref, '/tags/')
         uses: softprops/action-gh-release@v1
