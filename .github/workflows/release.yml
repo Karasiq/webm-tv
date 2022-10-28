@@ -48,6 +48,7 @@ jobs:
           Version="${{steps.version.outputs.version}}"
           Universal="${{github.workspace}}/target/universal"
           JAVA_OPTS="-Xmx4G"
+          rm -rf ${{github.workspace}}/target/universal/*
           sbt universal:packageBin
       - name: Upload artifacts
         uses: actions/upload-artifact@v3
@@ -65,4 +66,4 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       - name: Cleanup
         run: |
-          rm -f "${{github.workspace}}/target/universal/*.zip"
+          rm -rf ${{github.workspace}}/target/universal/*

@@ -4,7 +4,7 @@ import akka.NotUsed
 import akka.actor.ActorSystem
 import akka.event.Logging
 import akka.http.scaladsl.Http
-import akka.http.scaladsl.model.headers.{`User-Agent`, Accept, Cookie}
+import akka.http.scaladsl.model.headers.{Accept, Cookie, `User-Agent`}
 import akka.http.scaladsl.model.{HttpRequest, MediaRange, MediaTypes}
 import akka.stream.ActorMaterializer
 import akka.stream.scaladsl.Source
@@ -13,9 +13,7 @@ import derive.key
 import upickle.Js
 import upickle.default._
 
-import scala.concurrent.Future
 import scala.language.implicitConversions
-import scala.util.Try
 
 private object JsonApiObjects {
   final case class PostId(value: Long) extends AnyVal
@@ -111,9 +109,9 @@ class Json2chBoardApi(
             .fold(ByteString.empty)(_ ++ _)
             // .map { bs ⇒ log.info("\n_________________________\n{}\n_________________________\n", bs.utf8String); bs }
             .map(bs ⇒ read[T](bs.utf8String))
-        // .map { bs ⇒ log.info("Response parsed: {}", bs); bs }
 
         case errorResponse ⇒
+          errorResponse.discardEntityBytes()
           Source.failed(new IllegalArgumentException(s"Request failed: $url -> ${errorResponse.status}"))
       }
       .log(s"2ch-json-api-${m.runtimeClass.getName}")
