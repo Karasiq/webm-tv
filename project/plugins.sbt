@@ -1,6 +1,6 @@
 logLevel := Level.Warn
 
-addSbtPlugin("org.scala-js" % "sbt-scalajs" % "0.6.20")
+addSbtPlugin("org.scala-js" % "sbt-scalajs" % "0.6.33")
 
 addSbtPlugin("com.github.karasiq" % "sbt-scalajs-bundler" % "1.0.7")
 
