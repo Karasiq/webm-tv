@@ -3,59 +3,36 @@ import com.karasiq.scalajsbundler.dsl.{Script, _}
 // Settings
 lazy val commonSettings =
   Seq(
-    organization      := "com.github.karasiq",
-    version           := "1.2.2",
-    isSnapshot        := version.value.endsWith("SNAPSHOT"),
-    scalaVersion      := "2.11.12",
-    publishMavenStyle := true,
-    publishTo := {
-      val nexus = "https://oss.sonatype.org/"
-      if (isSnapshot.value)
-        Some("snapshots" at nexus + "content/repositories/snapshots")
-      else
-        Some("releases" at nexus + "service/local/staging/deploy/maven2")
-    },
-    Test / publishArtifact := false,
-    pomIncludeRepository   := { _ => false },
-    licenses               := Seq("Apache License, Version 2.0" -> url("http://opensource.org/licenses/Apache-2.0")),
-    homepage               := Some(url("https://github.com/Karasiq/webm-tv")),
-    pomExtra :=
-      <scm>
-      <url>git@github.com:Karasiq/webm-tv.git</url>
-      <connection>scm:git:git@github.com:Karasiq/webm-tv.git</connection>
-    </scm>
-    <developers>
-      <developer>
-        <id>karasiq</id>
-        <name>Piston Karasiq</name>
-        <url>https://github.com/Karasiq</url>
-      </developer>
-    </developers>
+    organization       := "com.github.karasiq",
+    version            := "1.2.2",
+    isSnapshot         := version.value.endsWith("SNAPSHOT"),
+    scalaVersion       := "2.13.9",
+    //evictionErrorLevel := Level.Debug
   )
 
 lazy val backendSettings =
   Seq(
     name := "webm-tv",
     libraryDependencies ++= {
-      val akkaV = "2.4.10"
+      val akkaV = "2.7.0"
       Seq(
-        "org.jsoup"                % "jsoup"                  % "1.9.2",
-        "com.typesafe.akka"       %% "akka-actor"             % akkaV,
-        "com.typesafe.akka"       %% "akka-http-experimental" % akkaV,
-        "com.lihaoyi"             %% "scalatags"              % "0.5.4",
-        "com.lihaoyi"             %% "upickle"                % "0.4.1",
-        "net.databinder.dispatch" %% "dispatch-core"          % "0.11.2",
-        "org.scala-lang.modules"  %% "scala-async"            % "0.9.6-RC2",
-        "org.scalatest"           %% "scalatest"              % "2.2.4" % "test",
-        "com.typesafe"             % "config"                 % "1.3.0",
-        "org.slf4j"                % "slf4j-simple"           % "1.7.13",
-        "com.google.guava"         % "guava"                  % "28.0-jre",
-        "com.github.karasiq"      %% "commons-configs"        % "1.0.11"
+        "org.jsoup"               % "jsoup"        % "1.15.3",
+        "com.typesafe.akka"      %% "akka-actor"   % akkaV,
+        "com.typesafe.akka"      %% "akka-stream"  % akkaV,
+        "com.typesafe.akka"      %% "akka-http"    % "10.4.0",
+        "com.lihaoyi"            %% "scalatags"    % "0.12.0",
+        "com.lihaoyi"            %% "upickle"      % "2.0.0",
+        "org.scala-lang.modules" %% "scala-async"  % "1.0.1",
+        "org.scalatest"          %% "scalatest"    % "3.2.14" % Test,
+        "com.typesafe"            % "config"       % "1.4.2",
+        "org.slf4j"               % "slf4j-simple" % "2.0.3",
+        "com.google.guava"        % "guava"        % "31.1-jre"
       )
-    },
-    Compile / mainClass            := Some("com.karasiq.webmtv.app.WebmTvMain"),
-    Compile / scalaJsBundlerInline := false,
-    Compile / scalaJsBundlerAssets += {
+    }
+  ) ++ inConfig(Compile)(Seq(
+    mainClass            := Some("com.karasiq.webmtv.app.WebmTvMain"),
+    scalaJsBundlerInline := false,
+    scalaJsBundlerAssets += {
       val bootstrap   = github("twbs", "bootstrap", "v3.3.6") / "dist"
       val VideoJSDist = "https://cdnjs.cloudflare.com/ajax/libs/video.js/7.20.3/"
       val jsDeps =
@@ -87,21 +64,21 @@ lazy val backendSettings =
       Bundle("index", jsDeps, appFiles, fonts, SJSApps.bundlerApp(frontend, fastOpt = false).value)
     },
     scalaJsBundlerCompilers := com.karasiq.scalajsbundler.compilers.AssetCompilers.keepJavaScriptAsIs
-  )
+  ))
 
 lazy val frontendSettings =
   Seq(
-    Compile / scalaJSUseMainModuleInitializer := true,
-    name                                      := "webm-tv-frontend",
+    name := "webm-tv-frontend",
     // resolvers                                 ++= Resolver.sonatypeOssRepos("snapshots"),
     libraryDependencies ++= Seq(
-      "be.doeraene"        %%% "scalajs-jquery"    % "0.9.0",
-      "com.lihaoyi"        %%% "scalatags"         % "0.5.4",
-      "com.lihaoyi"        %%% "scalarx"           % "0.3.1",
-      "com.lihaoyi"        %%% "upickle"           % "0.3.6",
-      "com.github.karasiq" %%% "scalajs-videojs"   % "1.1.0",
-      "com.github.karasiq" %%% "scalajs-bootstrap" % "1.0.9"
+      "com.lihaoyi"        %%% "scalatags"         % "0.12.0",
+      "com.lihaoyi"        %%% "scalarx"           % "0.4.3",
+      "com.lihaoyi"        %%% "upickle"           % "2.0.0",
+      "org.scala-js"       %%% "scalajs-dom"       % "1.0.0",
+      "com.github.karasiq" %%% "scalajs-videojs"   % "1.1.1",
+      "com.github.karasiq" %%% "scalajs-bootstrap" % "2.4.2"
     ),
+    Compile / scalaJSUseMainModuleInitializer := true,
     Compile / npmDependencies ++= Seq(
       "video.js" -> "7.20.3"
     )
