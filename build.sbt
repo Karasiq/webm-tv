@@ -15,10 +15,10 @@ lazy val commonSettings =
       else
         Some("releases" at nexus + "service/local/staging/deploy/maven2")
     },
-    publishArtifact in Test := false,
-    pomIncludeRepository    := { _ ⇒ false },
-    licenses                := Seq("Apache License, Version 2.0" → url("http://opensource.org/licenses/Apache-2.0")),
-    homepage                := Some(url("https://github.com/Karasiq/webm-tv")),
+    Test / publishArtifact := false,
+    pomIncludeRepository   := { _ => false },
+    licenses               := Seq("Apache License, Version 2.0" -> url("http://opensource.org/licenses/Apache-2.0")),
+    homepage               := Some(url("https://github.com/Karasiq/webm-tv")),
     pomExtra :=
       <scm>
       <url>git@github.com:Karasiq/webm-tv.git</url>
@@ -53,12 +53,9 @@ lazy val backendSettings =
         "com.github.karasiq"      %% "commons-configs"        % "1.0.11"
       )
     },
-    mainClass in Compile            := Some("com.karasiq.webmtv.app.WebmTvMain"),
-    scalaJsBundlerInline in Compile := false,
-    scalaJsBundlerCompile in Compile :=
-      (scalaJsBundlerCompile in Compile)
-        .dependsOn(fullOptJS in Compile in frontend).value,
-    scalaJsBundlerAssets in Compile += {
+    Compile / mainClass            := Some("com.karasiq.webmtv.app.WebmTvMain"),
+    Compile / scalaJsBundlerInline := false,
+    Compile / scalaJsBundlerAssets += {
       val bootstrap   = github("twbs", "bootstrap", "v3.3.6") / "dist"
       val VideoJSDist = "https://cdnjs.cloudflare.com/ajax/libs/video.js/7.20.3/"
       val jsDeps =
@@ -85,21 +82,18 @@ lazy val backendSettings =
           Html from WebmTvAssets.index,
           Style from WebmTvAssets.style,
           Image("img/background.jpg") from file("frontend/webapp/img/background.jpg"),
-          Image("favicon.ico").withMime("image/x-icon") from file("frontend/webapp/img/favicon.ico"),
-
-          // Scala.js app
-          Script from file("frontend/target/scala-2.11/webm-tv-frontend-opt.js"),
-          Script from file("frontend/target/scala-2.11/webm-tv-frontend-launcher.js")
+          Image("favicon.ico").withMime("image/x-icon") from file("frontend/webapp/img/favicon.ico")
         )
-      Bundle("index", jsDeps, appFiles, fonts)
-    }
+      Bundle("index", jsDeps, appFiles, fonts, SJSApps.bundlerApp(frontend, fastOpt = false).value)
+    },
+    scalaJsBundlerCompilers := com.karasiq.scalajsbundler.compilers.AssetCompilers.keepJavaScriptAsIs
   )
 
 lazy val frontendSettings =
   Seq(
-    scalaJSUseMainModuleInitializer in Compile := true,
-    name                                       := "webm-tv-frontend",
-    resolvers                                  += Resolver.sonatypeRepo("snapshots"),
+    Compile / scalaJSUseMainModuleInitializer := true,
+    name                                      := "webm-tv-frontend",
+    // resolvers                                 ++= Resolver.sonatypeOssRepos("snapshots"),
     libraryDependencies ++= Seq(
       "be.doeraene"        %%% "scalajs-jquery"    % "0.9.0",
       "com.lihaoyi"        %%% "scalatags"         % "0.5.4",
@@ -107,12 +101,15 @@ lazy val frontendSettings =
       "com.lihaoyi"        %%% "upickle"           % "0.3.6",
       "com.github.karasiq" %%% "scalajs-videojs"   % "1.1.0",
       "com.github.karasiq" %%% "scalajs-bootstrap" % "1.0.9"
+    ),
+    Compile / npmDependencies ++= Seq(
+      "video.js" -> "7.20.3"
     )
   )
 
 lazy val dockerSettings =
   Seq(
-    dockerBaseImage    := "openjdk:8-jre-stretch",
+    dockerBaseImage    := "openjdk:11-jre-stretch",
     dockerExposedPorts := Seq(8900),
     dockerUsername     := Some("karasiq"),
     dockerUpdateLatest := true
@@ -122,9 +119,9 @@ lazy val dockerSettings =
 lazy val backend =
   project.in(file("."))
     .settings(commonSettings, backendSettings, dockerSettings)
-    .enablePlugins(ScalaJSBundlerPlugin, JavaAppPackaging, DockerPlugin)
+    .enablePlugins(SJSAssetBundlerPlugin, JavaAppPackaging, DockerPlugin)
 
 lazy val frontend =
   project.in(file("frontend"))
     .settings(commonSettings, frontendSettings)
-    .enablePlugins(ScalaJSPlugin)
+    .enablePlugins(ScalaJSBundlerPlugin)
