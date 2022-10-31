@@ -7,11 +7,11 @@ import akka.http.scaladsl.Http
 import akka.http.scaladsl.Http.ServerBinding
 import akka.stream.ActorMaterializer
 import akka.util.Timeout
-import com.karasiq.common.configs.ConfigImplicits._
 import com.karasiq.webmtv.sosach.Json2chBoardApi
 
 import scala.concurrent.Await
 import scala.concurrent.duration._
+import scala.jdk.DurationConverters._
 import scala.language.postfixOps
 import scala.util.{Failure, Success}
 
@@ -19,22 +19,21 @@ object WebmTvMain extends App {
   def startup(): Unit = {
     implicit val timeout = Timeout(20 seconds)
 
-    implicit val actorSystem = ActorSystem("webm-tv")
+    implicit val actorSystem      = ActorSystem("webm-tv")
     implicit val executionContext = actorSystem.dispatcher
-    implicit val materializer = ActorMaterializer()
 
-    val config = actorSystem.settings.config.getConfig("webm-tv")
+    val config   = actorSystem.settings.config.getConfig("webm-tv")
     val boardApi = new Json2chBoardApi(config.getString("sosach.host"), config.getString("sosach.usercode-auth"))
 
-    val store = new WebmInMemStore(config.getFiniteDuration("thread-ttl"))
+    val store           = new WebmInMemStore(config.getDuration("thread-ttl").toScala)
     val storeDispatcher = actorSystem.actorOf(WebmStoreDispatcher.props(boardApi, store), "storeDispatcher")
-    val server = new WebmTvServer(storeDispatcher)
+    val server          = new WebmTvServer(storeDispatcher)
 
+    // noinspection ScalaDeprecation
     Http().bindAndHandle(server.route, config.getString("host"), config.getInt("port")).onComplete {
-      case Success(ServerBinding(address)) ⇒
-        actorSystem.log.info("Webm-TV server listening at {}", address)
+      case Success(ServerBinding(address)) => actorSystem.log.info("Webm-TV server listening at {}", address)
 
-      case Failure(exc) ⇒
+      case Failure(exc) =>
         actorSystem.log.error(exc, "Port binding failure")
         actorSystem.terminate()
     }

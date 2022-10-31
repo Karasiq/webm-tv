@@ -4,14 +4,14 @@ import akka.NotUsed
 import akka.actor.ActorSystem
 import akka.event.Logging
 import akka.http.scaladsl.Http
-import akka.http.scaladsl.model.headers.{Accept, Cookie, `User-Agent`}
+import akka.http.scaladsl.model.headers.{`User-Agent`, Accept, Cookie}
 import akka.http.scaladsl.model.{HttpRequest, MediaRange, MediaTypes}
-import akka.stream.ActorMaterializer
 import akka.stream.scaladsl.Source
 import akka.util.ByteString
-import derive.key
-import upickle.Js
+import upickle.core.Visitor
+import upickle.default
 import upickle.default._
+import upickle.implicits._
 
 import scala.language.implicitConversions
 
@@ -22,13 +22,13 @@ private object JsonApiObjects {
       postId.value
 
     implicit val postIdReader: Reader[PostId] =
-      Reader[PostId] {
-        case Js.Str(str) ⇒ PostId(str.toLong)
+      new Reader.Delegate[Any, PostId](implicitly[Reader[Long]].map(PostId(_)))
 
-        case Js.Num(num) ⇒ PostId(num.toLong)
+    implicit val postIdWriter: Writer[PostId] =
+      new Writer[PostId] {
+        override def write0[V](out: Visitor[_, V], v: PostId): V =
+          out.visitString(v.value.toString, -1)
       }
-
-    implicit val postIdWriter: Writer[PostId] = Writer[PostId](postId ⇒ Js.Str(postId.value.toString))
   }
 
   case class PostFile(path: String)
@@ -43,27 +43,33 @@ private object JsonApiObjects {
       id.hashCode
   }
   case class ThreadWrapped(@key("board") board: BoardDescription, @key("threads") thread: Option[Thread])
+
+  implicit lazy val PostFileRW: default.ReadWriter[PostFile]                 = macroRW[PostFile]
+  implicit lazy val PostRW: default.ReadWriter[Post]                         = macroRW[Post]
+  implicit lazy val ThreadRW: default.ReadWriter[Thread]                     = macroRW[Thread]
+  implicit lazy val BoardDescriptionRW: default.ReadWriter[BoardDescription] = macroRW[BoardDescription]
+  implicit lazy val BoardRW: default.ReadWriter[Board]                       = macroRW[Board]
+  implicit lazy val ThreadWrappedRW: default.ReadWriter[ThreadWrapped]       = macroRW[ThreadWrapped]
 }
 
 class Json2chBoardApi(
     host: String = "2ch.hk",
     usercodeAuth: String = ""
-  )(implicit as: ActorSystem,
-    am: ActorMaterializer) extends BoardApi {
+  )(implicit as: ActorSystem) extends BoardApi {
   private[this] val log = Logging(as, getClass)
 
   import JsonApiObjects.PostId._
 
-  def board(name: String) = {
+  def board(name: String): Source[Board.Thread, NotUsed] = {
     val url = s"https://$host/$name/index.json"
     retrieveJson[JsonApiObjects.Board](url)
-      .flatMapConcat { page ⇒
-        val pages = page.pages.filter(_ > 0).map(page ⇒ s"https://$host/$name/$page.json")
+      .flatMapConcat { page =>
+        val pages = page.pages.filter(_ > 0).map(page => s"https://$host/$name/$page.json")
         // noinspection ScalaDeprecation
         val restPages =
           Source(pages.toVector)
-            .flatMapConcat(url ⇒
-              retrieveJson[JsonApiObjects.Board](url).recoverWith { case err ⇒
+            .flatMapConcat(url =>
+              retrieveJson[JsonApiObjects.Board](url).recoverWith { case err =>
                 log.error(err, "Error reading board page: {}", url)
                 Source.empty
               }
@@ -71,22 +77,22 @@ class Json2chBoardApi(
 
         Source.single(page).concat(restPages)
       }
-      .mapConcat { board ⇒
+      .mapConcat { board =>
         val threads =
-          for (threadObj ← board.threads)
-            yield Board.Thread(board.id, threadObj.posts.map((postObj: JsonApiObjects.Post) ⇒ jsonToAppPost(postObj)))
+          for (threadObj <- board.threads)
+            yield Board.Thread(board.id, threadObj.posts.map((postObj: JsonApiObjects.Post) => jsonToAppPost(postObj)))
         threads.toVector
       }
       .log(s"board-$name")
   }
 
-  def thread(board: String, id: Long) = {
+  def thread(board: String, id: Long): Source[Board.Thread, NotUsed] = {
     val url = s"https://$host/$board/res/$id.json"
     retrieveJson[JsonApiObjects.ThreadWrapped](url)
-      .map(thread ⇒
+      .map(thread =>
         Board.Thread(
           thread.board.id,
-          thread.thread.toSeq.flatMap(_.posts.map((postObj: JsonApiObjects.Post) ⇒ jsonToAppPost(postObj)))
+          thread.thread.toSeq.flatMap(_.posts.map((postObj: JsonApiObjects.Post) => jsonToAppPost(postObj)))
         )
       )
       .named(s"thread-$board-$id")
@@ -104,13 +110,13 @@ class Json2chBoardApi(
           )
       )))
       .flatMapConcat {
-        case successResponse if successResponse.status.isSuccess() ⇒
+        case successResponse if successResponse.status.isSuccess() =>
           successResponse.entity.dataBytes
             .fold(ByteString.empty)(_ ++ _)
             // .map { bs ⇒ log.info("\n_________________________\n{}\n_________________________\n", bs.utf8String); bs }
-            .map(bs ⇒ read[T](bs.utf8String))
+            .map(bs => read[T](bs.utf8String))
 
-        case errorResponse ⇒
+        case errorResponse =>
           errorResponse.discardEntityBytes()
           Source.failed(new IllegalArgumentException(s"Request failed: $url -> ${errorResponse.status}"))
       }
@@ -121,9 +127,9 @@ class Json2chBoardApi(
         postObj.id,
         postObj.subject,
         postObj.comment,
-        Option(postObj.files).getOrElse(Nil).map(file ⇒ s"https://$host${file.path}")
+        Option(postObj.files).getOrElse(Nil).map(file => s"https://$host${file.path}")
       )
     catch {
-      case err: Exception ⇒ throw new IllegalArgumentException(s"Error parsing post: $postObj", err)
+      case err: Exception => throw new IllegalArgumentException(s"Error parsing post: $postObj", err)
     }
 }

@@ -5,3 +5,4 @@ frontend/webapp/node_modules
 frontend/webapp/assets/bower
 frontend/webapp/out
 *.bat
+*.log

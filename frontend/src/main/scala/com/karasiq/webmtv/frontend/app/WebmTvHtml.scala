@@ -4,10 +4,7 @@ import scala.scalajs.concurrent.JSExecutionContext.Implicits.queue
 import scalatags.JsDom.all._
 import org.scalajs.dom.{Element, KeyboardEvent, document, window}
 import rx._
-import com.karasiq.bootstrap.BootstrapImplicits._
-import com.karasiq.bootstrap.grid.GridSystem
-import com.karasiq.bootstrap.icons.FontAwesome
-import com.karasiq.bootstrap.popover.Popover
+import com.karasiq.bootstrap.Bootstrap.default._, scalaTags.all._
 import com.karasiq.videojs._
 import com.karasiq.webmtv.frontend.utils.HammerJS
 import com.karasiq.webmtv.frontend.utils.WebmTvPlayerUtils._
@@ -72,7 +69,7 @@ trait WebmTvHtml {
         }
 
         def downloadVideo(): Unit = {
-          val anchor = a(href := videoSource.now.getOrElse("#"), "download".attr := "", target := "_blank", display.none).render
+          val anchor = a(href := videoSource.now.getOrElse("#"), attr("download") := "", target := "_blank", display.none).render
           document.body.appendChild(anchor)
           window.setTimeout(() ⇒ document.body.removeChild(anchor), 700)
           anchor.click()
@@ -89,7 +86,7 @@ trait WebmTvHtml {
           }
         }
 
-        val loopIcon = Rx[Tag](if (loop()) "repeat".fontAwesome(FontAwesome.spin) else "repeat".fontAwesome())
+        val loopIcon = Rx[Tag](if (loop()) "repeat".fontAwesome(FontAwesome.spin) else "repeat".faIcon)
         val vjsXsHide = "vjs-xs-hide".addClass
 
         // Player buttons

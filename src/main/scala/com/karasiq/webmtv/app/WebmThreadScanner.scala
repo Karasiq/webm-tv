@@ -1,6 +1,7 @@
 package com.karasiq.webmtv.app
 
-import scala.collection.JavaConversions._
+import scala.jdk.DurationConverters._
+import scala.jdk.CollectionConverters._
 
 import akka.actor.{Actor, ActorLogging, Props}
 import akka.stream.ActorMaterializer
@@ -23,9 +24,9 @@ class WebmThreadScanner(boardApi: BoardApi, store: WebmStore) extends Actor with
 
   private[this] val config = context.system.settings.config.getConfig("webm-tv.sosach")
   private[this] object settings {
-    val videoExtensions: Set[String] = config.getStringList("video-extensions").toSet
-    val includes: Seq[String]        = config.getStringList("include-threads")
-    val excludes: Seq[String]        = config.getStringList("exclude-threads")
+    val videoExtensions: Set[String] = config.getStringList("video-extensions").asScala.toSet
+    val includes: Seq[String]        = config.getStringList("include-threads").asScala.toSeq
+    val excludes: Seq[String]        = config.getStringList("exclude-threads").asScala.toSeq
   }
 
   private[this] def isVideoFile(file: String): Boolean =
@@ -33,31 +34,31 @@ class WebmThreadScanner(boardApi: BoardApi, store: WebmStore) extends Actor with
 
   private[this] def isVideoThread(thread: Board.Thread): Boolean = {
     val isVideo       = thread.posts.flatMap(_.files).exists(isVideoFile)
-    val isIncluded    = settings.includes.exists(pt ⇒ pt.r.findFirstIn(thread.opPost.content.toLowerCase).isDefined)
-    val isNotExcluded = settings.excludes.forall(pt ⇒ pt.r.findFirstIn(thread.opPost.content.toLowerCase).isEmpty)
+    val isIncluded    = settings.includes.exists(pt => pt.r.findFirstIn(thread.opPost.content.toLowerCase).isDefined)
+    val isNotExcluded = settings.excludes.forall(pt => pt.r.findFirstIn(thread.opPost.content.toLowerCase).isEmpty)
     (isIncluded || (settings.includes.isEmpty && isVideo)) && isNotExcluded
   }
 
   override def receive: Actor.Receive = {
-    case ScanBoard(board) ⇒
+    case ScanBoard(board) =>
       log.info("Rescanning board: /{}/", board)
       val self   = context.self
       val sender = context.sender()
       boardApi.board(board)
-        //.filter(isVideoThread)
-        .runForeach(thread ⇒ self.tell(ScanThread(board, thread.id), sender))
+        // .filter(isVideoThread)
+        .runForeach(thread => self.tell(ScanThread(board, thread.id), sender))
 
-    case ScanThread(board, id) ⇒
+    case ScanThread(board, id) =>
       val sender   = context.sender()
       val threadId = ThreadId(board, id)
       val cached   = store.get(threadId)
       if (cached.isEmpty) {
         log.info("Rescanning thread: /{}/{}", board, id)
-        boardApi.thread(board, id).runForeach { thread ⇒
+        boardApi.thread(board, id).runForeach { thread =>
           val files =
             for {
-              post ← thread.posts
-              file ← post.files if isVideoFile(file)
+              post <- thread.posts
+              file <- post.files if isVideoFile(file)
             } yield file.replaceFirst("^https?://", "//")
           store.update(threadId, files)
           sender ! WebmList(files)
