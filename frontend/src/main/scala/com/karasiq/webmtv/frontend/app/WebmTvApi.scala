@@ -17,17 +17,15 @@ class JsonWebmTvApi extends WebmTvApi {
 
   private[this] val DefaultTimeout = 5000
 
-  private[this] def doAjaxRequest[T: Reader](url: String): Future[T] = {
+  private[this] def doAjaxRequest[T: Reader](url: String): Future[T] =
     Ajax.get(url, timeout = DefaultTimeout).map(r ⇒ read[T](r.responseText))
-  }
 
-  def getVideos(boardId: Option[String] = None): Future[Seq[String]] = boardId match {
-    case Some(board) ⇒
-      doAjaxRequest[Seq[String]](s"/$board/videos.json?timestamp=${js.Date.now()}")
+  def getVideos(boardId: Option[String] = None): Future[Seq[String]] =
+    boardId match {
+      case Some(board) ⇒ doAjaxRequest[Seq[String]](s"/$board/videos.json?timestamp=${js.Date.now()}")
 
-    case None ⇒
-      doAjaxRequest[Seq[String]](s"/videos.json?timestamp=${js.Date.now()}")
-  }
+      case None ⇒ doAjaxRequest[Seq[String]](s"/videos.json?timestamp=${js.Date.now()}")
+    }
 }
 
 object WebmTvApi extends JsonWebmTvApi

@@ -44,7 +44,7 @@ class WebmThreadScanner(boardApi: BoardApi, store: WebmStore) extends Actor with
       val self   = context.self
       val sender = context.sender()
       boardApi.board(board)
-        //.filter(isVideoThread)
+        // .filter(isVideoThread)
         .runForeach(thread ⇒ self.tell(ScanThread(board, thread.id), sender))
 
     case ScanThread(board, id) ⇒

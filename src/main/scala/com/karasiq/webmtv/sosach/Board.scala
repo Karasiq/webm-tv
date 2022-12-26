@@ -7,9 +7,13 @@ object Board {
   case class Thread(board: String, posts: Seq[Post]) {
     assert(posts.nonEmpty, "Thread couldn't be empty")
 
-    def opPost: Post = posts.head
-    def answers: Seq[Post] = posts.drop(1)
+    def opPost: Post =
+      posts.head
+
+    def answers: Seq[Post] =
+      posts.drop(1)
   }
 
-  implicit def threadAsPost(th: Thread): Post = th.opPost
+  implicit def threadAsPost(th: Thread): Post =
+    th.opPost
 }
