@@ -8,11 +8,12 @@ import scala.collection.JavaConverters._
 import scala.concurrent.duration.FiniteDuration
 
 final class WebmInMemStore(threadTtl: FiniteDuration) extends WebmStore {
-  private[this] val cache = CacheBuilder.newBuilder()
-    .concurrencyLevel(1)
-    .expireAfterWrite(threadTtl.toNanos, TimeUnit.NANOSECONDS)
-    .maximumSize(10000)
-    .build[ThreadId, Seq[String]]()
+  private[this] val cache =
+    CacheBuilder.newBuilder()
+      .concurrencyLevel(1)
+      .expireAfterWrite(threadTtl.toNanos, TimeUnit.NANOSECONDS)
+      .maximumSize(10000)
+      .build[ThreadId, Seq[String]]()
 
   override def get(id: ThreadId): Option[Seq[String]] =
     Option(cache.getIfPresent(id))
@@ -27,5 +28,6 @@ final class WebmInMemStore(threadTtl: FiniteDuration) extends WebmStore {
 }
 
 object WebmInMemStore {
-  def apply(threadTtl: FiniteDuration): WebmInMemStore = new WebmInMemStore(threadTtl)
+  def apply(threadTtl: FiniteDuration): WebmInMemStore =
+    new WebmInMemStore(threadTtl)
 }

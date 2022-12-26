@@ -4,7 +4,7 @@ import akka.NotUsed
 import akka.actor.ActorSystem
 import akka.event.Logging
 import akka.http.scaladsl.Http
-import akka.http.scaladsl.model.headers.{Accept, Cookie, `User-Agent`}
+import akka.http.scaladsl.model.headers.{`User-Agent`, Accept, Cookie}
 import akka.http.scaladsl.model.{HttpRequest, MediaRange, MediaTypes}
 import akka.stream.ActorMaterializer
 import akka.stream.scaladsl.Source
