@@ -37,7 +37,7 @@ lazy val backendSettings = Seq(
   libraryDependencies ++= {
     val akkaV = "2.4.10"
     Seq(
-      "org.jsoup" % "jsoup" % "1.9.2",
+      "org.jsoup" % "jsoup" % "1.18.2",
       "com.typesafe.akka" %% "akka-actor" % akkaV,
       "com.typesafe.akka" %% "akka-http-experimental" % akkaV,
       "com.lihaoyi" %% "scalatags" % "0.5.4",
